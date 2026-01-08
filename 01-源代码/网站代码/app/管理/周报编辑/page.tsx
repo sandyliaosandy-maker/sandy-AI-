@@ -250,7 +250,7 @@ export default function NewsletterEditorPage() {
                   }
                 }}
                 className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-pink"
-                placeholder="输入标签后按 Enter 添加"
+                placeholder={'输入标签后按 Enter 添加'}
               />
             </div>
             <div className="flex items-center">
