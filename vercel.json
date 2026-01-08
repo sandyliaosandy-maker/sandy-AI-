@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd \"01-源代码/网站代码\" && npm run build",
+  "devCommand": "cd \"01-源代码/网站代码\" && npm run dev",
+  "installCommand": "cd \"01-源代码/网站代码\" && npm install --legacy-peer-deps",
+  "outputDirectory": "01-源代码/网站代码/.next",
+  "framework": "nextjs"
+}
+
