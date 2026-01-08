@@ -204,7 +204,7 @@ function generateMarkdownContent(row: TableRow): string {
   for (const field of otherFields) {
     if (row[field] && typeof row[field] === 'string' && row[field].trim()) {
       // 将 <br> 标签转换为换行符，避免 MDX 解析错误
-      let fieldContent = row[field]
+      const fieldContent = row[field]
         .replace(/<br\s*\/?>/gi, '\n')  // 将 <br> 或 <br/> 转换为换行
         .replace(/<br\s*\/?>/gi, '\n')  // 再次处理，确保所有变体都被转换
         .trim()

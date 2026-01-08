@@ -164,7 +164,7 @@ function parseMarkdownTable(filePath: string): TableRow[] {
         normalizedHeader === 'title'
       ) {
         // 清理标题：移除 Markdown 链接格式和 HTML 实体
-        let cleanTitle = value
+        const cleanTitle = value
           // 移除 Markdown 链接格式 [文本](URL)，只保留文本部分
           .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
           // 移除 HTML 实体编码（如 &#124;）
@@ -249,7 +249,7 @@ function parseMarkdownTable(filePath: string): TableRow[] {
     // 如果没有文件路径，根据标题生成一个默认路径（用户可以后续编辑）
     if (!row.filePath && row.title) {
       // 生成一个基于标题的文件名（保留中文字符，移除特殊字符，限制长度）
-      let sanitizedTitle = row.title
+      const sanitizedTitle = row.title
         // 移除 Markdown 链接格式 [文本](URL)
         .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
         // 移除 HTML 实体编码（如 &#124;）

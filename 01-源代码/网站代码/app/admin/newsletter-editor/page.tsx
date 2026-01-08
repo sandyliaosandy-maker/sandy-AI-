@@ -120,7 +120,7 @@ export default function NewsletterEditorPage() {
         const getFieldValue = (field: string): string => {
           if (!content) return ''
           // 使用类型断言和可选链操作符
-          const value = (content as any)[field]
+          const value = (content as Record<string, unknown>)[field]
           return value && typeof value === 'string' ? value : ''
         }
         

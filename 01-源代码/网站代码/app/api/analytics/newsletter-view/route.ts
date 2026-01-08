@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 }
 
 // 允许 GET 请求用于测试
-export async function GET(_request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     message: '周报访问统计 API',
     usage: 'POST /api/analytics/newsletter-view',

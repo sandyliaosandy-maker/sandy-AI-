@@ -69,7 +69,7 @@ export default function NewsletterPage({ params }: PageProps) {
   
   // 尝试多种匹配方式，确保能找到对应的周报
   // 这是因为 Next.js 在处理中文路径时，URL 编码可能不一致
-  let newsletter = allNewsletters.find((n: Newsletter) => {
+  const newsletter = allNewsletters.find((n: Newsletter) => {
     // 1. 精确匹配原始 slug（Next.js 可能已经解码）
     if (n.slug === rawSlug) return true
     // 2. 匹配解码后的 slug（处理 URL 编码）
