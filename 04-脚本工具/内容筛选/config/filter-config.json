@@ -1,0 +1,16 @@
+{
+  "obsidianPath": "/Users/luyu/CascadeProjects/陆羽的知识萃取系统V1.0/obsidian_export",
+  "tableFile": "知识萃取库.md",
+  "projectContentPath": "../01-源代码/网站代码/内容",
+  "filters": {
+    "date": {
+      "custom": "最近30天"
+    }
+  },
+  "syncOptions": {
+    "preserveStructure": true,
+    "syncAttachments": true,
+    "incrementalSync": true
+  }
+}
+

@@ -1,0 +1,83 @@
+基于你现在拥有完整的本地 Obsidian 资讯库这一优势，最适合你的技术方案是 “Git-based Headless CMS”（基于 Git 的无头内容管理系统） 模式。
+
+这个方案的核心理念是：Obsidian 是你的后台编辑器，GitHub 是你的数据库，Next.js 是你的前台展示。
+
+以下是这套方案的整体技术架构描述：
+
+1. 整体架构逻辑图
+代码段
+
+graph TD
+    A[Python 萃取系统] -->|1. 生成 .md 文件| B(本地 Obsidian / Inbox 文件夹)
+    B -->|2. 人工筛选 & 移动| C(本地 Obsidian / Public 文件夹)
+    D[个人写作 / 小红书] -->|直接写作| C
+    C -->|3. Obsidian Git 插件 / 自动 Push| E[GitHub 仓库]
+    E -->|4. 触发 Webhook| F[Vercel 构建服务器]
+    F -->|5. Next.js 静态编译| G[最终网站 zengzhang.ai]
+2. 详细技术分层说明
+第一层：数据源层 (Local Source)
+你的本地 Obsidian 仓库就是唯一的“真理之源（Source of Truth）”。
+
+目录结构规划： 为了保护隐私，必须物理隔离公开和私有内容。
+
+/Inbox：存放 Python 抓取来的原始新闻（草稿状态）。
+
+/Public：网站的数据源。只有移动到这个文件夹的文件才会被网站读取。
+
+/Public/News：对应网站的 Home 板块。
+
+/Public/Notes：对应网站的 Notes 板块。
+
+/Public/Pages：对应网站的 About 等单页。
+
+/Private：你的私人笔记（网站代码会配置忽略此文件夹）。
+
+文件格式： 所有文件必须包含 YAML Frontmatter（头部元数据），例如：
+
+YAML
+
+---
+title: "DeepSeek 商业化分析"
+date: 2023-10-27
+tags: [AI, 商业]
+score: 9.5  # 你的系统打分
+summary: "一句话摘要..."
+---
+第二层：同步层 (Transport)
+连接本地与云端的桥梁，利用 Git 的版本控制特性。
+
+工具： Obsidian Git 插件。
+
+配置：
+
+设置自动备份间隔（例如每 20 分钟），或者手动快捷键触发。
+
+配置 .gitignore 文件，确保 /Private 文件夹永远不会被上传到 GitHub，保障绝对安全。
+
+作用： 当你在 Obsidian 里写完笔记按 Ctrl+S (或自动保存) 后，插件会自动执行 git add, git commit, git push，把更新推送到 GitHub。
+
+第三步：构建层 (Frontend & Build)
+这是网站的代码部分，负责把 Markdown 变成漂亮的网页。
+
+框架： Next.js (App Router)。
+
+内容处理引擎： Contentlayer (强烈推荐) 或 next-mdx-remote。
+
+原理： Contentlayer 会扫描你 GitHub 仓库里的 Markdown 文件，自动把 YAML 头信息转换成 JSON 数据对象，把正文转换成 HTML。
+
+类型安全： 它能保证如果你的 Markdown 里忘了写 date，构建时就会报错，防止网站挂掉。
+
+样式： Tailwind CSS + @tailwindcss/typography 插件（一键排版 Markdown 文章，非常漂亮）。
+
+图片处理： 图片直接放在 Obsidian 的附件文件夹中，Next.js 构建时会将它们作为静态资源打包。
+
+第四步：部署层 (Deployment)
+平台： Vercel。
+
+流程：
+
+Vercel 绑定你的 GitHub 仓库。
+
+一旦 GitHub 接收到新的 Push（来自你的 Obsidian），Vercel 自动开始构建。
+
+大约 1 分钟后，新内容上线。

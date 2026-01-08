@@ -1,0 +1,52 @@
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 构建产物
+.next/
+out/
+dist/
+build/
+.contentlayer/
+
+# 环境变量
+.env*.local
+.env*.production
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 系统文件
+.DS_Store
+*.pem
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 私有内容（重要：确保私有笔记不会被提交）
+01-源代码/内容源/私有笔记/
+**/私有笔记/
+
+# 临时文件
+08-临时文件/
+*.tmp
+*.cache
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.cursor/
+
+# 备份文件
+07-备份存档/
+

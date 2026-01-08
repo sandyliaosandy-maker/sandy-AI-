@@ -1,0 +1,14 @@
+[
+  {
+    "newsletterSlug": "测试04",
+    "timestamp": "2026-01-08T02:09:45.167Z",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "referer": "http://localhost:3002/newsletter/%E6%B5%8B%E8%AF%9504",
+    "pathname": "/api/analytics/newsletter-view",
+    "language": "zh-CN,zh;q=0.9",
+    "timezone": "Asia/Shanghai",
+    "screenResolution": "1470x956",
+    "viewport": "1050x751"
+  }
+]
