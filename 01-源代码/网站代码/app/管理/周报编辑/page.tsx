@@ -6,25 +6,38 @@ import Image from 'next/image'
 import { Upload, X, Save, Loader2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 // 安全地导入 Contentlayer 数据
-let allNews: any[] = []
-let allNotes: any[] = []
+interface ContentItem {
+  slug: string
+  title: string
+  date: string
+  tags: string[]
+  summary?: string
+}
+
+let allNews: ContentItem[] = []
+let allNotes: ContentItem[] = []
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const contentlayerModule = require('../../../../.contentlayer/generated')
-  allNews = contentlayerModule.allNews || []
-  allNotes = contentlayerModule.allNotes || []
+  allNews = (contentlayerModule.allNews as ContentItem[]) || []
+  allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
 } catch (error) {
   // Contentlayer 数据尚未生成
   allNews = []
   allNotes = []
 }
-type News = any
-type Note = any
+type News = ContentItem
+type Note = ContentItem
 
 // 动态导入 Markdown 编辑器（避免 SSR 问题）
 // 如果 @uiw/react-md-editor 未安装，使用简单的 textarea
-let MDEditor: any = null
+let MDEditor: React.ComponentType<{
+  value: string
+  onChange: (value: string | undefined) => void
+  height?: number
+}> | null = null
 try {
-  // @ts-ignore - 模块可能不存在
+  // @ts-expect-error - 模块可能不存在
   MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
 } catch (e) {
   // 如果导入失败，使用 textarea
@@ -54,7 +67,7 @@ export default function NewsletterEditorPage() {
   })
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [availableContent, setAvailableContent] = useState<(News | Note)[]>([])
+  const [availableContent, setAvailableContent] = useState<ContentItem[]>([])
   const [searchQuery, setSearchQuery] = useState('')
 
   // 获取可用的内容列表
@@ -88,7 +101,7 @@ export default function NewsletterEditorPage() {
       if (result.success) {
         setFormData((prev) => ({ ...prev, coverImage: result.url }))
       } else {
-        alert(`上传失败: ${result.error}`)
+        alert(`上传失败: ${result.error || '未知错误'}`)
       }
     } catch (error) {
       console.error('上传错误:', error)
@@ -143,7 +156,7 @@ export default function NewsletterEditorPage() {
         alert('周报保存成功！')
         router.push('/管理')
       } else {
-        alert(`保存失败: ${result.error}`)
+        alert(`保存失败: ${result.error || '未知错误'}`)
       }
     } catch (error) {
       console.error('保存错误:', error)

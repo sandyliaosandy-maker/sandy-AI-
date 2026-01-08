@@ -10,6 +10,7 @@ interface MDXContentProps {
 const mdxComponents = {
   img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
     if (!props.src || typeof props.src !== 'string') {
+      // eslint-disable-next-line @next/next/no-img-element
       return <img {...props} alt={props.alt || ''} className="rounded-lg" />
     }
     return (
