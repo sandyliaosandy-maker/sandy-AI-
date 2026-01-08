@@ -1,14 +1,23 @@
+import { notFound } from 'next/navigation'
+import { MDXContent } from '@/components/内容组件/内容渲染'
+
+interface Page {
+  slug: string
+  title: string
+  body: {
+    code: string
+  }
+}
+
 // 安全地导入 Contentlayer 数据
-let allPages: any[] = []
+let allPages: Page[] = []
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const contentlayerModule = require('../../.contentlayer/generated')
-  allPages = contentlayerModule.allPages || []
+  allPages = (contentlayerModule.allPages as Page[]) || []
 } catch (error) {
   allPages = []
 }
-
-import { notFound } from 'next/navigation'
-import { MDXContent } from '@/components/内容组件/内容渲染'
 
 export const metadata = {
   title: '关于 - Sandy的AI收藏夹',
@@ -16,7 +25,7 @@ export const metadata = {
 }
 
 export default function AboutPage() {
-  const aboutPage = allPages.find((page: any) => page.slug === '关于')
+  const aboutPage = allPages.find((page: Page) => page.slug === '关于')
 
   if (!aboutPage) {
     notFound()

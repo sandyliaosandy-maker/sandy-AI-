@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     if (includedItems && includedItems.length > 0) {
       content += `---\n\n## 本期内容\n\n`
       content += `本期周报包含了以下精选内容：\n\n`
-      includedItems.forEach((item: any, index: number) => {
+      includedItems.forEach((item: string | { slug: string; chineseTitle?: string }, index: number) => {
         // 兼容处理：支持旧格式（字符串）和新格式（对象）
         const slug = typeof item === 'string' ? item : item.slug
         const title = typeof item === 'string' ? `内容 ${index + 1}` : (item.chineseTitle || `内容 ${index + 1}`)

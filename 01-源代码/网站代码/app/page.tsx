@@ -32,7 +32,7 @@ export default async function Home() {
    * - undefined 和 true 都视为已发布
    */
   const publishedNewsletters = allNewsletters
-    .filter((n: any) => {
+    .filter((n) => {
       const isPublished = n.published !== false
       return isPublished
     })
@@ -40,11 +40,11 @@ export default async function Home() {
      * 按日期倒序排序（最新的在前）
      * 将日期字符串转换为时间戳进行比较
      */
-    .sort((a: any, b: any) => {
+    .sort((a, b) => {
       const dateA = new Date(a.date as string).getTime()
       const dateB = new Date(b.date as string).getTime()
       return dateB - dateA // 最新的在前
-    })
+  })
   
   // 如果有周报，显示周报列表
   if (publishedNewsletters.length > 0) {

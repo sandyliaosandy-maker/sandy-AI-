@@ -47,7 +47,7 @@ export default function NewsletterPage({ params }: PageProps) {
   }
   
   // 尝试多种匹配方式
-  let newsletter = allNewsletters.find((n: Newsletter) => {
+  const newsletter = allNewsletters.find((n: Newsletter) => {
     // 1. 精确匹配原始 slug
     if (n.slug === rawSlug) return true
     // 2. 匹配解码后的 slug

@@ -26,8 +26,6 @@ try {
   allNews = []
   allNotes = []
 }
-type News = ContentItem
-type Note = ContentItem
 
 // 动态导入 Markdown 编辑器（避免 SSR 问题）
 // 如果 @uiw/react-md-editor 未安装，使用简单的 textarea
