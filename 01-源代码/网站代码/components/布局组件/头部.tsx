@@ -23,7 +23,7 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo/标题 */}
           <Link href="/" className="text-xl md:text-2xl font-bold text-neutral-800">
-            增长黑客AI周报
+            Sandy的AI观察报
           </Link>
 
           {/* 桌面端导航链接 */}

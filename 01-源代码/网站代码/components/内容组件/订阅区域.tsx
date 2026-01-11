@@ -11,7 +11,7 @@ export function NewsletterSection() {
   return (
     <div className="bg-white rounded-card p-6 md:p-8 shadow-card">
       <h3 className="text-xl font-semibold text-neutral-800 mb-4">
-        增长黑客AI周报
+        Sandy的AI观察报
       </h3>
       <p className="text-neutral-600 mb-6">
         订阅我们的周报，每周获取最新的 AI 工具、商业洞察和增长技巧。

@@ -202,7 +202,7 @@ export default function NewsletterEditorPage() {
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-pink"
-                placeholder="例如：增长黑客AI周报 EP#12"
+                placeholder="例如：Sandy的AI观察报 EP#12"
               />
             </div>
             <div>
