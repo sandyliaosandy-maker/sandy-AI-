@@ -39,6 +39,12 @@ const nextConfig = {
         destination: '/管理',
       },
       {
+        // 将英文路径 /admin/api/:path* 重定向到中文路径 /管理/api/:path*
+        // 确保 API 路由也能正确访问
+        source: '/admin/api/:path*',
+        destination: '/管理/api/:path*',
+      },
+      {
         /**
          * 将中文路径 /周报/:slug* 重定向到英文路径 /newsletter/:slug*
          * 原因：Next.js 在处理中文路径时可能存在编码问题
@@ -52,15 +58,41 @@ const nextConfig = {
   
   /**
    * Webpack 配置
-   * 配置别名，解决 Contentlayer 生成的类型文件路径问题
+   * 
+   * 功能：
+   * - 配置模块路径别名，解决 Contentlayer 生成的模块文件解析问题
+   * - 添加 ES 模块（.mjs）扩展名解析支持
+   * 
+   * 问题背景：
+   * Contentlayer 在开发模式下生成 `.mjs` 文件（ES 模块格式）以提高 HMR 速度。
+   * Next.js 的 webpack 默认无法解析不带扩展名的 `.mjs` 文件导入路径。
+   * 
+   * 解决方案：
+   * 1. 通过别名配置，将导入路径直接指向 `index.mjs` 文件
+   * 2. 添加 `.mjs` 到扩展名解析列表，确保 webpack 能够识别 ES 模块文件
+   * 
+   * @param {import('webpack').Configuration} config - Webpack 配置对象
+   * @returns {import('webpack').Configuration} 修改后的配置对象
    */
   webpack: (config) => {
+    // 配置模块路径别名
+    // 将 `.contentlayer/generated` 和 `contentlayer/generated` 都指向实际生成的 index.mjs 文件
+    // 这样代码中使用 `import { ... } from '../.contentlayer/generated'` 时，
+    // webpack 会正确解析到 `.contentlayer/generated/index.mjs`
     config.resolve.alias = {
       ...config.resolve.alias,
-      // 将 contentlayer/generated 和 .contentlayer/generated 都指向实际生成的文件
-      '.contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated'),
-      'contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated'),
+      '.contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated/index.mjs'),
+      'contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated/index.mjs'),
     }
+    
+    // 添加 .mjs 扩展名解析支持
+    // 确保 webpack 能够识别和解析 ES 模块文件（.mjs）
+    // 扩展名解析顺序：先尝试已有扩展名，再尝试 .mjs
+    config.resolve.extensions = [
+      ...config.resolve.extensions,
+      '.mjs',
+    ]
+    
     return config
   },
 }

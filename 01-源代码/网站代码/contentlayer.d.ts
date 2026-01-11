@@ -13,6 +13,8 @@ declare module '../.contentlayer/generated' {
     tags: string[]
     score?: number
     summary?: string
+    source?: string
+    sourceUrl?: string
     slug: string
     chineseTitle?: string
     underwaterInfo?: string

@@ -29,9 +29,10 @@ interface NewsletterContentListProps {
   includedItems: string // JSON 字符串格式的包含内容数组
   allNews: News[] // 所有新闻数据（从父组件传递）
   allNotes: Note[] // 所有笔记数据（从父组件传递）
+  sourceUrlMap?: Record<string, string> // slug -> sourceUrl 映射
 }
 
-export default function NewsletterContentList({ includedItems, allNews, allNotes }: NewsletterContentListProps) {
+export default function NewsletterContentList({ includedItems, allNews, allNotes, sourceUrlMap = {} }: NewsletterContentListProps) {
   // 调试信息（仅在开发环境）
   if (process.env.NODE_ENV === 'development') {
     console.log('[周报内容列表] 接收到的数据:', {
@@ -208,9 +209,23 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
           ? new Date(originalContent.date as string).toLocaleDateString('zh-CN')
           : ''
         // 判断是新闻还是笔记（新闻有 score 字段）
-        // const isNews = originalContent && 'score' in originalContent // 暂时未使用
-        // 详情页 URL（目前新闻和笔记都使用 /笔记/ 路径）
-        const detailUrl = `/笔记/${item.slug}`
+        const isNews = originalContent && 'score' in originalContent
+        
+        // 提取原始链接
+        // 优先从 sourceUrlMap 中获取（服务端提取的）
+        // 其次从 originalContent.sourceUrl 字段获取
+        // 最后使用内部链接
+        let originalUrl: string | null = null
+        
+        if (sourceUrlMap[item.slug]) {
+          originalUrl = sourceUrlMap[item.slug]
+        } else if (originalContent && 'sourceUrl' in originalContent && originalContent.sourceUrl) {
+          originalUrl = originalContent.sourceUrl as string
+        }
+        
+        // 如果有原始链接，使用原始链接；否则使用内部链接
+        const linkUrl = originalUrl || `/笔记/${item.slug}`
+        const isExternalLink = !!originalUrl
 
         return (
           <article
@@ -253,13 +268,25 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
                     )}
                   </div>
                 </div>
-                <Link
-                  href={detailUrl}
-                  className="flex items-center gap-1 text-primary-blue hover:text-primary-pink transition-colors text-sm font-medium flex-shrink-0"
-                >
-                  阅读全文
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
+                {isExternalLink ? (
+                  <a
+                    href={linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary-blue hover:text-primary-pink transition-colors text-sm font-medium flex-shrink-0"
+                  >
+                    阅读全文
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <Link
+                    href={linkUrl}
+                    className="flex items-center gap-1 text-primary-blue hover:text-primary-pink transition-colors text-sm font-medium flex-shrink-0"
+                  >
+                    阅读全文
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                )}
               </div>
 
               {/* 水下信息 - 始终显示，即使为空也显示占位符 */}

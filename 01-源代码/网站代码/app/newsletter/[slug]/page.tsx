@@ -11,10 +11,42 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Calendar, Tag, ArrowLeft } from '@/components/界面组件/图标'
-import { allNewsletters, allNews, allNotes, type Newsletter } from '../../../.contentlayer/generated'
+import { allNewsletters, allNews, allNotes, type Newsletter, type News, type Note } from '../../../.contentlayer/generated'
 import { MDXContent } from '@/components/内容组件/内容渲染'
 import NewsletterContentList from '@/components/内容组件/周报内容列表'
 import NewsletterAnalytics from '@/components/内容组件/周报访问统计'
+
+/**
+ * 从新闻和笔记中提取原始链接
+ * 返回一个映射对象：slug -> sourceUrl
+ */
+function extractSourceUrls(allNews: News[], allNotes: Note[]): Record<string, string> {
+  const urlMap: Record<string, string> = {}
+  
+  // 处理新闻
+  allNews.forEach((news) => {
+    // 优先使用 sourceUrl 字段
+    if ('sourceUrl' in news && news.sourceUrl) {
+      urlMap[news.slug] = news.sourceUrl as string
+    } else if (news.body && 'raw' in news.body) {
+      // 从正文中提取第一个链接（通常在"## 原标题"部分）
+      const bodyRaw = news.body.raw as string
+      const linkMatch = bodyRaw.match(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/)
+      if (linkMatch && linkMatch[2]) {
+        urlMap[news.slug] = linkMatch[2]
+      }
+    }
+  })
+  
+  // 处理笔记（如果有 sourceUrl）
+  allNotes.forEach((note) => {
+    if ('sourceUrl' in note && note.sourceUrl) {
+      urlMap[note.slug] = note.sourceUrl as string
+    }
+  })
+  
+  return urlMap
+}
 
 interface PageProps {
   params: {
@@ -191,6 +223,7 @@ export default function NewsletterPage({ params }: PageProps) {
             includedItems={newsletter.includedItems || '[]'} 
             allNews={allNews}
             allNotes={allNotes}
+            sourceUrlMap={extractSourceUrls(allNews, allNotes)}
           />
         </section>
 

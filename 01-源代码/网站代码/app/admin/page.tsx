@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, CheckCircle2, XCircle, Loader2, FileText } from 'lucide-react'
+import { Search, CheckCircle2, XCircle, Loader2, FileText, Upload } from 'lucide-react'
 
 interface TableRow {
   filePath: string
@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [rows, setRows] = useState<TableRow[]>([])
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [syncingToOnline, setSyncingToOnline] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [syncResult, setSyncResult] = useState<{
     success: boolean
@@ -32,6 +33,23 @@ export default function AdminPage() {
       skippedFiles: number
       errors: string[]
     }
+    error?: string
+  } | null>(null)
+  const [syncToOnlineResult, setSyncToOnlineResult] = useState<{
+    success: boolean
+    message?: string
+    stats?: {
+      added: number
+      modified: number
+      deleted: number
+      total: number
+    }
+    files?: {
+      added: string[]
+      modified: string[]
+      deleted: string[]
+    }
+    logs?: string[]
     error?: string
   } | null>(null)
 
@@ -175,6 +193,48 @@ export default function AdminPage() {
     }
   }
 
+  // 同步到线上
+  const handleSyncToOnline = async () => {
+    if (!confirm('确定要将周报目录的所有更改同步到线上吗？\n\n这将执行 Git 提交和推送操作。')) {
+      return
+    }
+
+    setSyncingToOnline(true)
+    setSyncToOnlineResult(null)
+
+    try {
+      const response = await fetch('/admin/api/sync-to-online', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSyncToOnlineResult({
+          success: true,
+          message: result.message,
+          stats: result.stats,
+          files: result.files,
+          logs: result.logs,
+        })
+      } else {
+        setSyncToOnlineResult({
+          success: false,
+          error: result.error,
+          logs: result.logs,
+        })
+      }
+    } catch (error) {
+      setSyncToOnlineResult({
+        success: false,
+        error: error instanceof Error ? error.message : '未知错误',
+      })
+    } finally {
+      setSyncingToOnline(false)
+    }
+  }
+
   // 筛选显示的行
   const filteredRows = rows.filter((row) => {
     if (!searchQuery) return true
@@ -211,20 +271,39 @@ export default function AdminPage() {
               从 Obsidian 表格中解析内容，手动选择需要同步的条目
             </p>
           </div>
-          <button
-            onClick={() => {
-              if (syncResult?.success && syncResult.stats && syncResult.stats.syncedFiles > 0) {
-                router.push('/admin/newsletter-editor')
-              } else {
-                alert('请先执行同步操作，至少同步一个文件后再创建周报')
-              }
-            }}
-            disabled={!syncResult?.success || !syncResult.stats || syncResult.stats.syncedFiles === 0}
-            className="inline-flex items-center px-6 py-3 bg-primary-pink text-white rounded-lg font-medium hover:bg-primary-pink/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            创建周报
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleSyncToOnline}
+              disabled={syncingToOnline}
+              className="inline-flex items-center px-6 py-3 bg-primary-blue text-white rounded-lg font-medium hover:bg-primary-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {syncingToOnline ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  同步中...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-5 w-5" />
+                  同步到线上
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (syncResult?.success && syncResult.stats && syncResult.stats.syncedFiles > 0) {
+                  router.push('/admin/newsletter-editor')
+                } else {
+                  alert('请先执行同步操作，至少同步一个文件后再创建周报')
+                }
+              }}
+              disabled={!syncResult?.success || !syncResult.stats || syncResult.stats.syncedFiles === 0}
+              className="inline-flex items-center px-6 py-3 bg-primary-pink text-white rounded-lg font-medium hover:bg-primary-pink/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileText className="mr-2 h-5 w-5" />
+              创建周报
+            </button>
+          </div>
         </div>
       </div>
 
@@ -425,6 +504,107 @@ export default function AdminPage() {
                 )
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 同步到线上结果 */}
+      {syncToOnlineResult && (
+        <div
+          className={`mt-6 p-6 rounded-lg border ${
+            syncToOnlineResult.success
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
+          }`}
+        >
+          <div className="flex items-start">
+            {syncToOnlineResult.success ? (
+              <CheckCircle2 className="h-6 w-6 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+            ) : (
+              <XCircle className="h-6 w-6 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <h3
+                className={`font-semibold mb-2 ${
+                  syncToOnlineResult.success ? 'text-green-800' : 'text-red-800'
+                }`}
+              >
+                {syncToOnlineResult.success ? '同步到线上成功！' : '同步到线上失败'}
+              </h3>
+              {syncToOnlineResult.success && syncToOnlineResult.stats && (
+                <div className="text-sm text-green-700 space-y-1 mb-3">
+                  <p>总计: {syncToOnlineResult.stats.total} 个更改</p>
+                  <p>新增: {syncToOnlineResult.stats.added} 个文件</p>
+                  <p>修改: {syncToOnlineResult.stats.modified} 个文件</p>
+                  <p>删除: {syncToOnlineResult.stats.deleted} 个文件</p>
+                </div>
+              )}
+              {syncToOnlineResult.success && syncToOnlineResult.files && (
+                <div className="text-sm text-green-700 space-y-2 mb-3">
+                  {syncToOnlineResult.files.added.length > 0 && (
+                    <div>
+                      <p className="font-medium">新增文件:</p>
+                      <ul className="list-disc list-inside ml-2 space-y-1">
+                        {syncToOnlineResult.files.added.map((file, idx) => (
+                          <li key={idx} className="font-mono text-xs break-all">
+                            {file}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {syncToOnlineResult.files.modified.length > 0 && (
+                    <div>
+                      <p className="font-medium">修改文件:</p>
+                      <ul className="list-disc list-inside ml-2 space-y-1">
+                        {syncToOnlineResult.files.modified.map((file, idx) => (
+                          <li key={idx} className="font-mono text-xs break-all">
+                            {file}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {syncToOnlineResult.files.deleted.length > 0 && (
+                    <div>
+                      <p className="font-medium">删除文件:</p>
+                      <ul className="list-disc list-inside ml-2 space-y-1">
+                        {syncToOnlineResult.files.deleted.map((file, idx) => (
+                          <li key={idx} className="font-mono text-xs break-all">
+                            {file}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              {syncToOnlineResult.logs && syncToOnlineResult.logs.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-green-200">
+                  <p className="font-medium text-sm text-green-800 mb-2">操作日志:</p>
+                  <div className="bg-white rounded p-3 max-h-48 overflow-y-auto">
+                    <pre className="text-xs text-green-700 whitespace-pre-wrap font-mono">
+                      {syncToOnlineResult.logs.join('\n')}
+                    </pre>
+                  </div>
+                </div>
+              )}
+              {!syncToOnlineResult.success && syncToOnlineResult.error && (
+                <div>
+                  <p className="text-sm text-red-700 mb-2">{syncToOnlineResult.error}</p>
+                  {syncToOnlineResult.logs && syncToOnlineResult.logs.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-red-200">
+                      <p className="font-medium text-sm text-red-800 mb-2">错误日志:</p>
+                      <div className="bg-white rounded p-3 max-h-48 overflow-y-auto">
+                        <pre className="text-xs text-red-700 whitespace-pre-wrap font-mono">
+                          {syncToOnlineResult.logs.join('\n')}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

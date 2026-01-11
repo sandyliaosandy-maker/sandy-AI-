@@ -14,6 +14,8 @@ export const News = defineDocumentType(() => ({
     tags: { type: 'list', of: { type: 'string' }, default: [] },
     score: { type: 'number', required: false },
     summary: { type: 'string', required: false },
+    source: { type: 'string', required: false }, // 来源名称
+    sourceUrl: { type: 'string', required: false }, // 原始链接 URL
     // 从 Obsidian 表格中提取的字段
     chineseTitle: { type: 'string', required: false }, // 中文标题
     underwaterInfo: { type: 'string', required: false }, // 水下信息
