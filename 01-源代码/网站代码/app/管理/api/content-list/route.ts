@@ -22,7 +22,7 @@ export async function GET() {
       title: item.title,
       date: item.date as string,
       tags: item.tags || [],
-      summary: item.summary,
+      summary: 'summary' in item ? item.summary : undefined,
     }))
     
     const noteItems: ContentItem[] = (allNotes || []).map((item) => ({
@@ -30,7 +30,7 @@ export async function GET() {
       title: item.title,
       date: item.date as string,
       tags: item.tags || [],
-      summary: item.summary,
+      summary: undefined, // Note 类型没有 summary 字段
     }))
     
     return NextResponse.json({
