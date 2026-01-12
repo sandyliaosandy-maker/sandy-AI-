@@ -14,33 +14,7 @@ interface ContentItem {
   summary?: string
 }
 
-let allNews: ContentItem[] = []
-let allNotes: ContentItem[] = []
-
-// 使用动态导入，避免构建时错误
-async function loadContentlayerData() {
-  try {
-    // 尝试使用 webpack 别名路径
-    const contentlayerModule = await import('../../.contentlayer/generated')
-    allNews = (contentlayerModule.allNews as ContentItem[]) || []
-    allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
-  } catch (error) {
-    // 如果别名路径失败，尝试使用相对路径的动态导入
-    try {
-      const contentlayerModule = await import('../../../../.contentlayer/generated')
-      allNews = (contentlayerModule.allNews as ContentItem[]) || []
-      allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
-    } catch (secondError) {
-      // Contentlayer 数据尚未生成或路径不正确
-      console.warn('无法加载 Contentlayer 数据:', error || secondError)
-      allNews = []
-      allNotes = []
-    }
-  }
-}
-
-// 注意：不在服务端同步加载，避免构建时错误
-// 所有数据加载都在客户端通过 useEffect 完成
+// 不再在客户端导入 Contentlayer 模块，改为通过 API 获取数据
 
 // 动态导入 Markdown 编辑器（避免 SSR 问题）
 // 如果 @uiw/react-md-editor 未安装，使用简单的 textarea
@@ -85,20 +59,28 @@ export default function NewsletterEditorPage() {
 
   // 获取可用的内容列表
   useEffect(() => {
-    // 在客户端加载 Contentlayer 数据
-    loadContentlayerData().then(() => {
-      const allContent = [...allNews, ...allNotes]
-      // 按日期排序，最新的在前
-      const sorted = allContent.sort((a, b) => {
-        const dateA = new Date(a.date as string).getTime()
-        const dateB = new Date(b.date as string).getTime()
-        return dateB - dateA
+    // 通过 API 获取内容列表，避免在客户端导入 Contentlayer 模块
+    fetch('/管理/api/content-list')
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success && result.data) {
+          const allContent = result.data.all || []
+          // 按日期排序，最新的在前
+          const sorted = allContent.sort((a: ContentItem, b: ContentItem) => {
+            const dateA = new Date(a.date as string).getTime()
+            const dateB = new Date(b.date as string).getTime()
+            return dateB - dateA
+          })
+          setAvailableContent(sorted)
+        } else {
+          console.error('获取内容列表失败:', result.error)
+          setAvailableContent([])
+        }
       })
-      setAvailableContent(sorted)
-    }).catch((error) => {
-      console.error('加载内容数据失败:', error)
-      setAvailableContent([])
-    })
+      .catch((error) => {
+        console.error('加载内容数据失败:', error)
+        setAvailableContent([])
+      })
   }, [])
 
   // 处理封面图上传
