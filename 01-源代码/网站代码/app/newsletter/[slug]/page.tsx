@@ -220,7 +220,7 @@ export default function NewsletterPage({ params }: PageProps) {
           // 如果没有 editorialContent，尝试从 body 中提取（兼容旧格式）
           // 提取 body 中"## 本期内容"之前的部分作为卷首语
           if (newsletter.body && 'code' in newsletter.body && newsletter.body.code) {
-            const bodyRaw = (newsletter.body as any).raw || ''
+            const bodyRaw = ('raw' in newsletter.body ? newsletter.body.raw : '') || ''
             if (bodyRaw.trim()) {
               // 显示整个 body（包含卷首语和"## 本期内容"部分）
               // 注意：这可能会显示"## 本期内容"部分，但至少能显示卷首语

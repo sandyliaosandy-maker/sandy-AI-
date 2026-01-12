@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 // 暂时注释掉认证相关功能（支付功能暂不开发）
+// import { useRouter } from 'next/navigation'
 // import { signOut } from 'next-auth/react'
 // import { User, LogOut, Crown } from '@/components/界面组件/图标'
 import { User, LogOut, Crown } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface UserMenuProps {
   user: {
@@ -19,7 +20,8 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user, mobile = false }: UserMenuProps) {
-  const router = useRouter()
+  // 暂时注释掉 router（支付功能暂不开发）
+  // const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [hasSubscription, setHasSubscription] = useState<boolean | null>(null)
 
@@ -63,10 +65,12 @@ export function UserMenu({ user, mobile = false }: UserMenuProps) {
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 transition-colors"
       >
         {user.image ? (
-          <img
+          <Image
             src={user.image}
             alt={user.name || 'User'}
-            className="h-8 w-8 rounded-full"
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-full object-cover"
           />
         ) : (
           <div className="h-8 w-8 rounded-full bg-primary-blue flex items-center justify-center text-white">
