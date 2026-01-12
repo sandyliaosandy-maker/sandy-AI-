@@ -227,7 +227,7 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
           ? new Date(originalContent.date as string).toLocaleDateString('zh-CN')
           : ''
         // 判断是新闻还是笔记（新闻有 score 字段）
-        const isNews = originalContent && 'score' in originalContent
+        // const isNews = originalContent && 'score' in originalContent // 暂时未使用
         
         // 提取原始链接
         // 优先从 sourceUrlMap 中获取（服务端提取的）

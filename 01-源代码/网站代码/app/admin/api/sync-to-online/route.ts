@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import * as path from 'path'
 
 const execAsync = promisify(exec)
 
@@ -85,16 +84,17 @@ async function runGitCommand(command: string, cwd: string): Promise<{ stdout: st
       env,
     })
     return result
-  } catch (error: any) {
+  } catch (error: unknown) {
     // exec 在命令返回非零退出码时会抛出错误，但可能包含有用的输出
+    const execError = error as { stdout?: string; stderr?: string; message?: string }
     return {
-      stdout: error.stdout || '',
-      stderr: error.stderr || error.message || '',
+      stdout: execError.stdout || '',
+      stderr: execError.stderr || execError.message || '',
     }
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // 1. 检查 Git 状态（使用相对路径，并包含未跟踪文件）
     const statusResult = await runGitCommand(

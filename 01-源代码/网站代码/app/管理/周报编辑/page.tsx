@@ -40,20 +40,8 @@ async function loadContentlayerData() {
   }
 }
 
-// 在客户端组件中，使用 useEffect 加载数据
-// 在服务端，直接尝试加载（如果可能）
-if (typeof window === 'undefined') {
-  // 服务端：尝试同步加载
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const contentlayerModule = require('../../../../.contentlayer/generated')
-    allNews = (contentlayerModule.allNews as ContentItem[]) || []
-    allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
-  } catch (error) {
-    // 忽略错误，在客户端加载
-    console.warn('服务端无法加载 Contentlayer 数据，将在客户端加载')
-  }
-}
+// 注意：不在服务端同步加载，避免构建时错误
+// 所有数据加载都在客户端通过 useEffect 完成
 
 // 动态导入 Markdown 编辑器（避免 SSR 问题）
 // 如果 @uiw/react-md-editor 未安装，使用简单的 textarea
