@@ -94,7 +94,7 @@ async function runGitCommand(command: string, cwd: string): Promise<{ stdout: st
   }
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     // 1. 检查 Git 状态（使用相对路径，并包含未跟踪文件）
     const statusResult = await runGitCommand(

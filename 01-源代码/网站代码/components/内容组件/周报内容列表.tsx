@@ -60,7 +60,6 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
           // 避免使用负向后顾断言（可能不支持），使用更兼容的方法
           let cleanedJson = ''
           let inEscape = false
-          let escapeCount = 0 // 用于检测连续的反斜杠
           
           for (let i = 0; i < includedItems.length; i++) {
             const char = includedItems[i]
@@ -69,13 +68,11 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
               // 在转义序列中，直接添加字符（包括转义的控制字符）
               cleanedJson += char
               inEscape = false
-              escapeCount = 0
               continue
             }
             
             if (char === '\\') {
               // 遇到反斜杠
-              escapeCount++
               cleanedJson += char
               // 检查下一个字符是否是转义序列的开始
               if (i + 1 < includedItems.length) {
