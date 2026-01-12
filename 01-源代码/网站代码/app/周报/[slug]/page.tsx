@@ -6,6 +6,10 @@ import { allNewsletters, allNews, allNotes, type Newsletter, type News, type Not
 import { MDXContent } from '@/components/内容组件/内容渲染'
 import NewsletterContentList from '@/components/内容组件/周报内容列表'
 import NewsletterAnalytics from '@/components/内容组件/周报访问统计'
+import { PremiumBadge } from '@/components/内容组件/会员标签'
+import { PremiumContentPreview } from '@/components/内容组件/付费内容预览'
+import { checkContentAccess } from '@/lib/access-control'
+import { getCurrentUser } from '@/lib/auth'
 
 /**
  * 从新闻和笔记中提取原始链接
@@ -57,7 +61,7 @@ export async function generateStaticParams() {
   })
 }
 
-export default function NewsletterPage({ params }: PageProps) {
+export default async function NewsletterPage({ params }: PageProps) {
   // 处理 URL 参数（Next.js 可能已经解码，也可能没有）
   // 尝试多种匹配方式
   const rawSlug = params.slug
@@ -114,12 +118,22 @@ export default function NewsletterPage({ params }: PageProps) {
     day: 'numeric',
   })
 
+  // 检查是否为付费内容
+  const isPremium = (newsletter as any).isPremium === true
+  const previewLength = (newsletter as any).previewLength || 500
+
+  // 获取当前用户和订阅状态
+  const user = await getCurrentUser()
+  const accessResult = await checkContentAccess(isPremium, user?.id)
+
   // 调试信息（仅在开发环境）
   if (process.env.NODE_ENV === 'development') {
     console.log('[周报详情页] 周报信息:', {
       title: newsletter.title,
       slug: newsletter.slug,
       coverImage: newsletter.coverImage,
+      isPremium,
+      canAccess: accessResult.canAccess,
     })
   }
 
@@ -154,9 +168,12 @@ export default function NewsletterPage({ params }: PageProps) {
 
         {/* 标题和元信息 */}
         <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-6">
-            {newsletter.title}
-          </h1>
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 flex-1">
+              {newsletter.title}
+            </h1>
+            {isPremium && <PremiumBadge />}
+          </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
             <div className="flex items-center gap-2">
@@ -180,11 +197,50 @@ export default function NewsletterPage({ params }: PageProps) {
         </header>
 
         {/* 卷首语 */}
-        {newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code && (
-          <section className="mb-12 prose prose-lg max-w-none">
-            <MDXContent code={newsletter.editorialContent.code} />
-          </section>
-        )}
+        {(() => {
+          // 优先使用 editorialContent 字段
+          if (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) {
+            return (
+              <section className="mb-12 prose prose-lg max-w-none">
+                {isPremium && !accessResult.canAccess ? (
+                  <PremiumContentPreview
+                    content={(newsletter.editorialContent as any).raw || ''}
+                    previewLength={previewLength}
+                    isSubscribed={false}
+                    mdxCode={newsletter.editorialContent.code}
+                  />
+                ) : (
+                  <MDXContent code={newsletter.editorialContent.code} />
+                )}
+              </section>
+            )
+          }
+          
+          // 如果没有 editorialContent，尝试从 body 中提取（兼容旧格式）
+          if (newsletter.body && 'code' in newsletter.body && newsletter.body.code) {
+            const bodyRaw = (newsletter.body as any).raw || ''
+            // 检查 body 是否包含卷首语内容（通常在前面的部分）
+            // 这里简单判断：如果 body 有内容，就显示
+            if (bodyRaw.trim()) {
+              return (
+                <section className="mb-12 prose prose-lg max-w-none">
+                  {isPremium && !accessResult.canAccess ? (
+                    <PremiumContentPreview
+                      content={bodyRaw}
+                      previewLength={previewLength}
+                      isSubscribed={false}
+                      mdxCode={newsletter.body.code}
+                    />
+                  ) : (
+                    <MDXContent code={newsletter.body.code} />
+                  )}
+                </section>
+              )
+            }
+          }
+          
+          return null
+        })()}
 
         {/* 分隔线 */}
         <hr className="my-12 border-neutral-200" />

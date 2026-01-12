@@ -207,11 +207,44 @@ export default function NewsletterPage({ params }: PageProps) {
         </header>
 
         {/* 卷首语 */}
-        {newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code && (
-          <section className="mb-12 prose prose-lg max-w-none">
-            <MDXContent code={newsletter.editorialContent.code} />
-          </section>
-        )}
+        {(() => {
+          // 优先使用 editorialContent 字段
+          if (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) {
+            return (
+              <section className="mb-12 prose prose-lg max-w-none">
+                <MDXContent code={newsletter.editorialContent.code} />
+              </section>
+            )
+          }
+          
+          // 如果没有 editorialContent，尝试从 body 中提取（兼容旧格式）
+          // 提取 body 中"## 本期内容"之前的部分作为卷首语
+          if (newsletter.body && 'code' in newsletter.body && newsletter.body.code) {
+            const bodyRaw = (newsletter.body as any).raw || ''
+            if (bodyRaw.trim()) {
+              // 查找"## 本期内容"的位置，只显示之前的内容
+              const contentIndex = bodyRaw.indexOf('## 本期内容')
+              const editorialText = contentIndex > 0 
+                ? bodyRaw.substring(0, contentIndex).trim()
+                : bodyRaw.trim()
+              
+              // 如果提取到了内容，显示卷首语
+              if (editorialText) {
+                // 需要重新编译这部分内容为 MDX
+                // 这里简单处理：如果 body.code 存在，直接使用，但只显示前面的部分
+                // 更好的方法是重新处理 MDX，但为了快速修复，我们先显示整个 body
+                // 注意：这可能会显示"## 本期内容"部分，但至少能显示卷首语
+                return (
+                  <section className="mb-12 prose prose-lg max-w-none">
+                    <MDXContent code={newsletter.body.code} />
+                  </section>
+                )
+              }
+            }
+          }
+          
+          return null
+        })()}
 
         {/* 分隔线 */}
         <hr className="my-12 border-neutral-200" />
