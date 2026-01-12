@@ -1,9 +1,13 @@
 /**
  * 会员专享标签组件
  * 用于在内容列表页标记付费内容
+ * 
+ * 注意：支付功能暂不开发，此组件暂时不使用
  */
 
-import { Crown } from '@/components/界面组件/图标'
+// 暂时注释掉导入（支付功能暂不开发）
+// import { Crown } from '@/components/界面组件/图标'
+import { Crown } from 'lucide-react'
 
 interface PremiumBadgeProps {
   className?: string

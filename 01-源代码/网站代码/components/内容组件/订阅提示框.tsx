@@ -6,7 +6,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Crown, Lock } from '@/components/界面组件/图标'
+// 暂时直接从 lucide-react 导入（支付功能暂不开发）
+import { Crown, Lock } from 'lucide-react'
 
 interface SubscribePromptProps {
   className?: string
