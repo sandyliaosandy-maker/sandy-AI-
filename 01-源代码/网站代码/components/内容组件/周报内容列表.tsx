@@ -56,34 +56,52 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
           // JSON 标准要求控制字符必须被转义（\n, \r, \t 等）
           console.warn('[周报内容列表] 第一次解析失败，尝试清理控制字符:', firstError)
           
-          // 方法1：转义所有未转义的控制字符
-          // 注意：不能使用负向后顾断言 (?<!)，因为可能不支持
-          // 使用更安全的方法：逐字符处理
+          // 改进的 JSON 清理方法：逐字符处理，智能检测转义序列
+          // 避免使用负向后顾断言（可能不支持），使用更兼容的方法
           let cleanedJson = ''
+          let inEscape = false
+          let escapeCount = 0 // 用于检测连续的反斜杠
+          
           for (let i = 0; i < includedItems.length; i++) {
             const char = includedItems[i]
-            const prevChar = i > 0 ? includedItems[i - 1] : ''
             
-            // 如果前一个字符是反斜杠，说明这是转义序列的一部分，直接保留
-            if (prevChar === '\\') {
+            if (inEscape) {
+              // 在转义序列中，直接添加字符（包括转义的控制字符）
               cleanedJson += char
+              inEscape = false
+              escapeCount = 0
+              continue
+            }
+            
+            if (char === '\\') {
+              // 遇到反斜杠
+              escapeCount++
+              cleanedJson += char
+              // 检查下一个字符是否是转义序列的开始
+              if (i + 1 < includedItems.length) {
+                const nextChar = includedItems[i + 1]
+                // 如果下一个字符是有效的转义字符，标记为转义序列
+                if ('"\\/bfnrtu'.includes(nextChar) || /[0-9a-fA-F]/.test(nextChar)) {
+                  inEscape = true
+                }
+              }
               continue
             }
             
             // 处理未转义的控制字符
-            if (char === '\n') {
-              cleanedJson += '\\n'
-            } else if (char === '\r') {
-              cleanedJson += '\\r'
-            } else if (char === '\t') {
-              cleanedJson += '\\t'
-            } else if (char === '\b') {
-              cleanedJson += '\\b'
-            } else if (char === '\f') {
-              cleanedJson += '\\f'
-            } else if (char.charCodeAt(0) < 32) {
-              // 其他控制字符，转换为 Unicode 转义序列
-              cleanedJson += '\\u' + ('0000' + char.charCodeAt(0).toString(16)).slice(-4)
+            const code = char.charCodeAt(0)
+            if (code < 32 || code === 127) {
+              // 控制字符需要转义
+              switch (code) {
+                case 0x08: cleanedJson += '\\b'; break // \b
+                case 0x09: cleanedJson += '\\t'; break // \t
+                case 0x0A: cleanedJson += '\\n'; break // \n
+                case 0x0C: cleanedJson += '\\f'; break // \f
+                case 0x0D: cleanedJson += '\\r'; break // \r
+                default:
+                  // 其他控制字符使用 Unicode 转义
+                  cleanedJson += '\\u' + ('0000' + code.toString(16)).slice(-4)
+              }
             } else {
               cleanedJson += char
             }

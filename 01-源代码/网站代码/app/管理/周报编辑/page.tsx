@@ -16,15 +16,43 @@ interface ContentItem {
 
 let allNews: ContentItem[] = []
 let allNotes: ContentItem[] = []
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const contentlayerModule = require('../../../../.contentlayer/generated')
-  allNews = (contentlayerModule.allNews as ContentItem[]) || []
-  allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
-} catch (error) {
-  // Contentlayer 数据尚未生成
-  allNews = []
-  allNotes = []
+
+// 使用动态导入，避免构建时错误
+async function loadContentlayerData() {
+  try {
+    // 尝试使用 webpack 别名路径
+    const contentlayerModule = await import('../../.contentlayer/generated')
+    allNews = (contentlayerModule.allNews as ContentItem[]) || []
+    allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
+  } catch (error) {
+    // 如果别名路径失败，尝试相对路径
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const contentlayerModule = require('../../../../.contentlayer/generated')
+      allNews = (contentlayerModule.allNews as ContentItem[]) || []
+      allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
+    } catch (secondError) {
+      // Contentlayer 数据尚未生成或路径不正确
+      console.warn('无法加载 Contentlayer 数据:', error || secondError)
+      allNews = []
+      allNotes = []
+    }
+  }
+}
+
+// 在客户端组件中，使用 useEffect 加载数据
+// 在服务端，直接尝试加载（如果可能）
+if (typeof window === 'undefined') {
+  // 服务端：尝试同步加载
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const contentlayerModule = require('../../../../.contentlayer/generated')
+    allNews = (contentlayerModule.allNews as ContentItem[]) || []
+    allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
+  } catch (error) {
+    // 忽略错误，在客户端加载
+    console.warn('服务端无法加载 Contentlayer 数据，将在客户端加载')
+  }
 }
 
 // 动态导入 Markdown 编辑器（避免 SSR 问题）
@@ -70,14 +98,20 @@ export default function NewsletterEditorPage() {
 
   // 获取可用的内容列表
   useEffect(() => {
-    const allContent = [...allNews, ...allNotes]
-    // 按日期排序，最新的在前
-    const sorted = allContent.sort((a, b) => {
-      const dateA = new Date(a.date as string).getTime()
-      const dateB = new Date(b.date as string).getTime()
-      return dateB - dateA
+    // 在客户端加载 Contentlayer 数据
+    loadContentlayerData().then(() => {
+      const allContent = [...allNews, ...allNotes]
+      // 按日期排序，最新的在前
+      const sorted = allContent.sort((a, b) => {
+        const dateA = new Date(a.date as string).getTime()
+        const dateB = new Date(b.date as string).getTime()
+        return dateB - dateA
+      })
+      setAvailableContent(sorted)
+    }).catch((error) => {
+      console.error('加载内容数据失败:', error)
+      setAvailableContent([])
     })
-    setAvailableContent(sorted)
   }, [])
 
   // 处理封面图上传
