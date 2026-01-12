@@ -4,6 +4,11 @@ import Image from 'next/image'
 import { Calendar, Tag, ArrowLeft } from '@/components/界面组件/图标'
 import { allNotes, allNews, type News, type Note } from '../../../.contentlayer/generated'
 import { MDXContent } from '@/components/内容组件/内容渲染'
+// 暂时注释掉付费内容相关功能（支付功能暂不开发）
+// import { PremiumBadge } from '@/components/内容组件/会员标签'
+// import { PremiumContentPreview } from '@/components/内容组件/付费内容预览'
+// import { checkContentAccess } from '@/lib/access-control'
+// import { getCurrentUser } from '@/lib/auth'
 
 interface PageProps {
   params: {
@@ -54,7 +59,7 @@ export async function generateStaticParams() {
   return [...noteParams, ...newsParams]
 }
 
-export default function NoteDetailPage({ params }: PageProps) {
+export default async function NoteDetailPage({ params }: PageProps) {
   // 查找笔记或新闻（使用 slug）
   const note = allNotes.find((n: Note) => n.slug === params.id)
   const news = allNews.find((n: News) => n.slug === params.id)
@@ -65,6 +70,12 @@ export default function NoteDetailPage({ params }: PageProps) {
 
   const post: News | Note = (note || news)!
   const isNote = !!note
+
+  // 暂时注释掉付费内容检查（支付功能暂不开发）
+  // const isPremium = (post as any).isPremium === true
+  // const previewLength = (post as any).previewLength || 500
+  // const user = await getCurrentUser()
+  // const accessResult = await checkContentAccess(isPremium, user?.id)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -79,9 +90,13 @@ export default function NoteDetailPage({ params }: PageProps) {
 
       {/* 文章头部 */}
       <article>
-        <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-6">
-          {post.title}
-        </h1>
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 flex-1">
+            {post.title}
+          </h1>
+          {/* 暂时注释掉付费标签（支付功能暂不开发） */}
+          {/* {isPremium && <PremiumBadge />} */}
+        </div>
 
         {/* 元信息 */}
         <PostMetadata post={post} />
@@ -107,7 +122,9 @@ export default function NoteDetailPage({ params }: PageProps) {
         ) : null}
 
         {/* 正文内容 */}
-        {post.body ? <MDXContent code={post.body.code} /> : null}
+        {post.body && (
+          <MDXContent code={post.body.code} />
+        )}
       </article>
     </div>
   )

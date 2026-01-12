@@ -6,10 +6,11 @@ import { allNewsletters, allNews, allNotes, type Newsletter, type News, type Not
 import { MDXContent } from '@/components/内容组件/内容渲染'
 import NewsletterContentList from '@/components/内容组件/周报内容列表'
 import NewsletterAnalytics from '@/components/内容组件/周报访问统计'
-import { PremiumBadge } from '@/components/内容组件/会员标签'
-import { PremiumContentPreview } from '@/components/内容组件/付费内容预览'
-import { checkContentAccess } from '@/lib/access-control'
-import { getCurrentUser } from '@/lib/auth'
+// 暂时注释掉付费内容相关功能（支付功能暂不开发）
+// import { PremiumBadge } from '@/components/内容组件/会员标签'
+// import { PremiumContentPreview } from '@/components/内容组件/付费内容预览'
+// import { checkContentAccess } from '@/lib/access-control'
+// import { getCurrentUser } from '@/lib/auth'
 
 /**
  * 从新闻和笔记中提取原始链接
@@ -118,24 +119,11 @@ export default async function NewsletterPage({ params }: PageProps) {
     day: 'numeric',
   })
 
-  // 检查是否为付费内容
-  const isPremium = (newsletter as any).isPremium === true
-  const previewLength = (newsletter as any).previewLength || 500
-
-  // 获取当前用户和订阅状态
-  const user = await getCurrentUser()
-  const accessResult = await checkContentAccess(isPremium, user?.id)
-
-  // 调试信息（仅在开发环境）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[周报详情页] 周报信息:', {
-      title: newsletter.title,
-      slug: newsletter.slug,
-      coverImage: newsletter.coverImage,
-      isPremium,
-      canAccess: accessResult.canAccess,
-    })
-  }
+  // 暂时注释掉付费内容检查（支付功能暂不开发）
+  // const isPremium = (newsletter as any).isPremium === true
+  // const previewLength = (newsletter as any).previewLength || 500
+  // const user = await getCurrentUser()
+  // const accessResult = await checkContentAccess(isPremium, user?.id)
 
   return (
     <div className="min-h-screen bg-white">
@@ -172,7 +160,8 @@ export default async function NewsletterPage({ params }: PageProps) {
             <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 flex-1">
               {newsletter.title}
             </h1>
-            {isPremium && <PremiumBadge />}
+            {/* 暂时注释掉付费标签（支付功能暂不开发） */}
+            {/* {isPremium && <PremiumBadge />} */}
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
@@ -202,16 +191,7 @@ export default async function NewsletterPage({ params }: PageProps) {
           if (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) {
             return (
               <section className="mb-12 prose prose-lg max-w-none">
-                {isPremium && !accessResult.canAccess ? (
-                  <PremiumContentPreview
-                    content={(newsletter.editorialContent as any).raw || ''}
-                    previewLength={previewLength}
-                    isSubscribed={false}
-                    mdxCode={newsletter.editorialContent.code}
-                  />
-                ) : (
-                  <MDXContent code={newsletter.editorialContent.code} />
-                )}
+                <MDXContent code={newsletter.editorialContent.code} />
               </section>
             )
           }
@@ -219,23 +199,24 @@ export default async function NewsletterPage({ params }: PageProps) {
           // 如果没有 editorialContent，尝试从 body 中提取（兼容旧格式）
           if (newsletter.body && 'code' in newsletter.body && newsletter.body.code) {
             const bodyRaw = (newsletter.body as any).raw || ''
-            // 检查 body 是否包含卷首语内容（通常在前面的部分）
-            // 这里简单判断：如果 body 有内容，就显示
+            // 检查 body 是否包含卷首语内容
+            // 提取 body 中"## 本期内容"之前的部分作为卷首语
             if (bodyRaw.trim()) {
-              return (
-                <section className="mb-12 prose prose-lg max-w-none">
-                  {isPremium && !accessResult.canAccess ? (
-                    <PremiumContentPreview
-                      content={bodyRaw}
-                      previewLength={previewLength}
-                      isSubscribed={false}
-                      mdxCode={newsletter.body.code}
-                    />
-                  ) : (
+              const contentIndex = bodyRaw.indexOf('## 本期内容')
+              // 如果有"## 本期内容"，只显示之前的部分；否则显示全部
+              const editorialText = contentIndex > 0 
+                ? bodyRaw.substring(0, contentIndex).trim()
+                : bodyRaw.trim()
+              
+              if (editorialText) {
+                // 显示整个 body（包含卷首语和"## 本期内容"部分）
+                // 注意：这可能会显示"## 本期内容"部分，但至少能显示卷首语
+                return (
+                  <section className="mb-12 prose prose-lg max-w-none">
                     <MDXContent code={newsletter.body.code} />
-                  )}
-                </section>
-              )
+                  </section>
+                )
+              }
             }
           }
           

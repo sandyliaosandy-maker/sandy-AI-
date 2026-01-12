@@ -2,10 +2,16 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+// 暂时注释掉认证相关功能（支付功能暂不开发）
+// import { useSession, signOut } from 'next-auth/react'
+// import { Menu, X, User, LogOut, Crown } from '@/components/界面组件/图标'
+// import { UserMenu } from '@/components/认证组件/用户菜单'
 import { Menu, X } from '@/components/界面组件/图标'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // 暂时注释掉认证相关功能（支付功能暂不开发）
+  // const { data: session } = useSession()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -37,6 +43,25 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
+            {/* 暂时注释掉用户菜单（支付功能暂不开发） */}
+            {/* {session?.user ? (
+              <UserMenu user={session.user} />
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/登录"
+                  className="text-neutral-600 hover:text-neutral-800 transition-colors"
+                >
+                  登录
+                </Link>
+                <Link
+                  href="/注册"
+                  className="px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-primary-blue/90 transition-colors"
+                >
+                  注册
+                </Link>
+              </div>
+            )} */}
           </div>
 
           {/* 移动端菜单按钮 */}
@@ -63,6 +88,39 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+              {/* 暂时注释掉用户菜单（支付功能暂不开发） */}
+              {/* {session?.user ? (
+                <>
+                  <UserMenu user={session.user} mobile />
+                  <button
+                    onClick={() => {
+                      signOut({ callbackUrl: '/' })
+                      setIsMenuOpen(false)
+                    }}
+                    className="text-left text-neutral-600 hover:text-neutral-800 transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    退出登录
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/登录"
+                    className="text-neutral-600 hover:text-neutral-800 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    登录
+                  </Link>
+                  <Link
+                    href="/注册"
+                    className="text-neutral-600 hover:text-neutral-800 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    注册
+                  </Link>
+                </>
+              )} */}
             </div>
           </div>
         )}

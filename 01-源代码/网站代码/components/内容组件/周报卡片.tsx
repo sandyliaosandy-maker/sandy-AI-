@@ -12,6 +12,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, Tag, ArrowRight } from '@/components/界面组件/图标'
+// 暂时注释掉付费标签（支付功能暂不开发）
+// import { PremiumBadge } from './会员标签'
 import type { Newsletter } from '../../.contentlayer/generated'
 
 interface NewsletterCardProps {
@@ -45,10 +47,16 @@ export function NewsletterCard({ newsletter, className = '' }: NewsletterCardPro
           )}
 
           <div className="p-6">
-            {/* 标题 */}
-            <h2 className="text-xl md:text-2xl font-bold text-neutral-800 mb-3 group-hover:text-primary-pink transition-colors line-clamp-2">
-              {newsletter.title}
-            </h2>
+            {/* 标题和付费标签 */}
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <h2 className="text-xl md:text-2xl font-bold text-neutral-800 group-hover:text-primary-pink transition-colors line-clamp-2 flex-1">
+                {newsletter.title}
+              </h2>
+              {/* 暂时注释掉付费标签（支付功能暂不开发） */}
+              {/* {(newsletter as any).isPremium === true && (
+                <PremiumBadge className="flex-shrink-0" />
+              )} */}
+            </div>
 
             {/* 元信息 */}
             <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600 mb-4">

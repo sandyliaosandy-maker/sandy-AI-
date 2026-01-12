@@ -222,24 +222,13 @@ export default function NewsletterPage({ params }: PageProps) {
           if (newsletter.body && 'code' in newsletter.body && newsletter.body.code) {
             const bodyRaw = (newsletter.body as any).raw || ''
             if (bodyRaw.trim()) {
-              // 查找"## 本期内容"的位置，只显示之前的内容
-              const contentIndex = bodyRaw.indexOf('## 本期内容')
-              const editorialText = contentIndex > 0 
-                ? bodyRaw.substring(0, contentIndex).trim()
-                : bodyRaw.trim()
-              
-              // 如果提取到了内容，显示卷首语
-              if (editorialText) {
-                // 需要重新编译这部分内容为 MDX
-                // 这里简单处理：如果 body.code 存在，直接使用，但只显示前面的部分
-                // 更好的方法是重新处理 MDX，但为了快速修复，我们先显示整个 body
-                // 注意：这可能会显示"## 本期内容"部分，但至少能显示卷首语
-                return (
-                  <section className="mb-12 prose prose-lg max-w-none">
-                    <MDXContent code={newsletter.body.code} />
-                  </section>
-                )
-              }
+              // 显示整个 body（包含卷首语和"## 本期内容"部分）
+              // 注意：这可能会显示"## 本期内容"部分，但至少能显示卷首语
+              return (
+                <section className="mb-12 prose prose-lg max-w-none">
+                  <MDXContent code={newsletter.body.code} />
+                </section>
+              )
             }
           }
           
