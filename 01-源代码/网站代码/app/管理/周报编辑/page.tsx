@@ -25,10 +25,9 @@ async function loadContentlayerData() {
     allNews = (contentlayerModule.allNews as ContentItem[]) || []
     allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
   } catch (error) {
-    // 如果别名路径失败，尝试相对路径
+    // 如果别名路径失败，尝试使用相对路径的动态导入
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const contentlayerModule = require('../../../../.contentlayer/generated')
+      const contentlayerModule = await import('../../../../.contentlayer/generated')
       allNews = (contentlayerModule.allNews as ContentItem[]) || []
       allNotes = (contentlayerModule.allNotes as ContentItem[]) || []
     } catch (secondError) {
