@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // import { hashPassword, checkPasswordStrength } from '@/lib/password'
 // import { signIn } from 'next-auth/react'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   // 暂时返回未实现（支付功能暂不开发）
   return NextResponse.json(
     { success: false, error: '注册功能暂未开放' },
