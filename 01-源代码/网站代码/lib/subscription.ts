@@ -54,8 +54,10 @@ export async function getUserSubscription(
  * @param userId 用户 ID（可选）
  * @returns 是否有有效订阅
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function hasActiveSubscription(_userId?: string): Promise<boolean> {
+export async function hasActiveSubscription(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _userId?: string
+): Promise<boolean> {
   // 暂时返回 false（支付功能暂不开发）
   return false
   // const subscription = await getUserSubscription(userId)
