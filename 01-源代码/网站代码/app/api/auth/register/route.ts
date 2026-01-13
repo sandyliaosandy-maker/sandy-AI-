@@ -10,6 +10,13 @@ import { NextRequest, NextResponse } from 'next/server'
 // import { signIn } from 'next-auth/react'
 
 export async function POST(request: NextRequest) {
+  // 暂时返回未实现（支付功能暂不开发）
+  return NextResponse.json(
+    { success: false, error: '注册功能暂未开放' },
+    { status: 501 }
+  )
+
+  /*
   try {
     const { email, password, name } = await request.json()
 
@@ -106,4 +113,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+  */
 }
