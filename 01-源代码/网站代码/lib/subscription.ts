@@ -17,6 +17,7 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getUserSubscription(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _userId?: string
 ): Promise<null> {
   // 暂时返回 null（支付功能暂不开发）
@@ -66,8 +67,10 @@ export async function hasActiveSubscription(_userId?: string): Promise<boolean> 
  * @param userId 用户 ID（可选）
  * @returns 是否可以访问
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function canAccessPremiumContent(_userId?: string): Promise<boolean> {
+export async function canAccessPremiumContent(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _userId?: string
+): Promise<boolean> {
   // 暂时返回 false（支付功能暂不开发）
   return false
   // return hasActiveSubscription(userId)
