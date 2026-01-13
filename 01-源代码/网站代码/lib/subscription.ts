@@ -17,7 +17,10 @@
  */
 export async function getUserSubscription(
   userId?: string
-): Promise<Subscription | null> {
+): Promise<null> {
+  // 暂时返回 null（支付功能暂不开发）
+  return null
+  /*
   try {
     const targetUserId = userId || (await getCurrentUser())?.id
 
@@ -41,6 +44,7 @@ export async function getUserSubscription(
     console.error('[Subscription] 获取订阅信息失败:', error)
     return null
   }
+  */
 }
 
 /**
@@ -49,8 +53,10 @@ export async function getUserSubscription(
  * @returns 是否有有效订阅
  */
 export async function hasActiveSubscription(userId?: string): Promise<boolean> {
-  const subscription = await getUserSubscription(userId)
-  return subscription !== null
+  // 暂时返回 false（支付功能暂不开发）
+  return false
+  // const subscription = await getUserSubscription(userId)
+  // return subscription !== null
 }
 
 /**
@@ -59,5 +65,7 @@ export async function hasActiveSubscription(userId?: string): Promise<boolean> {
  * @returns 是否可以访问
  */
 export async function canAccessPremiumContent(userId?: string): Promise<boolean> {
-  return hasActiveSubscription(userId)
+  // 暂时返回 false（支付功能暂不开发）
+  return false
+  // return hasActiveSubscription(userId)
 }
