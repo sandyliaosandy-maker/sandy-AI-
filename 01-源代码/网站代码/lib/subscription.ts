@@ -1,11 +1,14 @@
 /**
  * 订阅检查工具
  * 用于检查用户的订阅状态
+ * 
+ * 注意：支付功能暂不开发，暂时注释掉相关功能
  */
 
-import { getCurrentUser } from './auth'
-import { getDatabase } from './db'
-import type { Subscription } from './db/schema'
+// 暂时注释掉相关导入（支付功能暂不开发）
+// import { getCurrentUser } from './auth'
+// import { getDatabase } from './db'
+// import type { Subscription } from './db/schema'
 
 /**
  * 检查用户是否有有效的订阅
