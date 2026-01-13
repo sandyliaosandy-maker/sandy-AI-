@@ -61,7 +61,7 @@ export default function SubscribePage() {
   const [loading, setLoading] = useState(false)
   // 暂时注释掉 subscription（支付功能暂不开发）
   // const [subscription, setSubscription] = useState<{ status: string; planType: string; currentPeriodEnd?: string } | null>(null)
-  const subscription = null
+  const subscription: { status: string; planType: string; currentPeriodEnd?: string } | null = null
   const [status] = useState<'unauthenticated'>('unauthenticated')
   // 暂时注释掉 session（支付功能暂不开发）
   // const session = null
