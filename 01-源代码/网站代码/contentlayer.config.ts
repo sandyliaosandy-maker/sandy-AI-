@@ -21,11 +21,26 @@ export const News = defineDocumentType(() => ({
     underwaterInfo: { type: 'string', required: false }, // 水下信息
     caseExtraction: { type: 'string', required: false }, // 案例提取
     relatedCompanies: { type: 'string', required: false }, // 涉及公司
+    // 付费内容标记
+    isPremium: { type: 'boolean', required: false, default: false }, // 是否付费内容，默认免费
+    previewLength: { type: 'number', required: false }, // 预览字符数（可选，默认500字）
   },
   computedFields: {
+    /**
+     * 生成新闻的 slug（URL 路径）
+     * 
+     * 处理逻辑：
+     * 1. 移除路径前缀 '公开内容/新闻/'
+     * 2. 移除文件扩展名 '.md'
+     */
     slug: {
       type: 'string',
-      resolve: (doc) => doc._raw.flattenedPath.replace('公开内容/新闻/', ''),
+      resolve: (doc) => {
+        // 移除路径前缀 '公开内容/新闻/'
+        const path = doc._raw.flattenedPath.replace('公开内容/新闻/', '')
+        // 移除文件扩展名 '.md'，确保 slug 不包含扩展名
+        return path.replace(/\.md$/, '')
+      },
     },
   },
 }))
@@ -44,11 +59,26 @@ export const Note = defineDocumentType(() => ({
     underwaterInfo: { type: 'string', required: false }, // 水下信息
     caseExtraction: { type: 'string', required: false }, // 案例提取
     relatedCompanies: { type: 'string', required: false }, // 涉及公司
+    // 付费内容标记
+    isPremium: { type: 'boolean', required: false, default: false }, // 是否付费内容，默认免费
+    previewLength: { type: 'number', required: false }, // 预览字符数（可选，默认500字）
   },
   computedFields: {
+    /**
+     * 生成笔记的 slug（URL 路径）
+     * 
+     * 处理逻辑：
+     * 1. 移除路径前缀 '公开内容/笔记/'
+     * 2. 移除文件扩展名 '.md'
+     */
     slug: {
       type: 'string',
-      resolve: (doc) => doc._raw.flattenedPath.replace('公开内容/笔记/', ''),
+      resolve: (doc) => {
+        // 移除路径前缀 '公开内容/笔记/'
+        const path = doc._raw.flattenedPath.replace('公开内容/笔记/', '')
+        // 移除文件扩展名 '.md'，确保 slug 不包含扩展名
+        return path.replace(/\.md$/, '')
+      },
     },
   },
 }))
@@ -61,9 +91,21 @@ export const Page = defineDocumentType(() => ({
     title: { type: 'string', required: true },
   },
   computedFields: {
+    /**
+     * 生成页面的 slug（URL 路径）
+     * 
+     * 处理逻辑：
+     * 1. 移除路径前缀 '公开内容/页面/'
+     * 2. 移除文件扩展名 '.md'
+     */
     slug: {
       type: 'string',
-      resolve: (doc) => doc._raw.flattenedPath.replace('公开内容/页面/', ''),
+      resolve: (doc) => {
+        // 移除路径前缀 '公开内容/页面/'
+        const path = doc._raw.flattenedPath.replace('公开内容/页面/', '')
+        // 移除文件扩展名 '.md'，确保 slug 不包含扩展名
+        return path.replace(/\.md$/, '')
+      },
     },
   },
 }))
@@ -92,6 +134,9 @@ export const Newsletter = defineDocumentType(() => ({
     includedItems: { type: 'string', required: false },
     tags: { type: 'list', of: { type: 'string' }, default: [] },
     published: { type: 'boolean', default: true },
+    // 付费内容标记
+    isPremium: { type: 'boolean', required: false, default: false }, // 是否付费内容，默认免费
+    previewLength: { type: 'number', required: false }, // 预览字符数（可选，默认500字）
   },
   computedFields: {
     /**
