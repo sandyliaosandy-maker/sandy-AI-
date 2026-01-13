@@ -60,11 +60,82 @@ export async function generateStaticParams() {
 }
 
 export default async function NoteDetailPage({ params }: PageProps) {
-  // 查找笔记或新闻（使用 slug）
-  const note = allNotes.find((n: Note) => n.slug === params.id)
-  const news = allNews.find((n: News) => n.slug === params.id)
+  // 处理 URL 参数（Next.js 可能已经解码，也可能没有）
+  // 由于中文路径在 URL 中会被编码，需要尝试多种匹配方式
+  const rawId = params.id
+  let decodedId: string
+  try {
+    // 尝试解码 URL 参数（处理中文路径编码）
+    decodedId = decodeURIComponent(rawId)
+  } catch {
+    // 如果解码失败，使用原始值
+    decodedId = rawId
+  }
+  
+  // 调试信息（仅在开发环境）
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[笔记详情页] 参数:', {
+      rawId,
+      decodedId,
+      allNoteSlugs: allNotes.map((n: Note) => n.slug),
+      allNewsSlugs: allNews.map((n: News) => n.slug),
+    })
+  }
+  
+  // 尝试多种匹配方式，确保能找到对应的笔记或新闻
+  // 这是因为 Next.js 在处理中文路径时，URL 编码可能不一致
+  const note = allNotes.find((n: Note) => {
+    // 1. 精确匹配原始 slug（Next.js 可能已经解码）
+    if (n.slug === rawId) return true
+    // 2. 匹配解码后的 slug（处理 URL 编码）
+    if (n.slug === decodedId) return true
+    // 3. 尝试编码匹配（以防 Next.js 自动编码了）
+    try {
+      if (n.slug === encodeURIComponent(rawId)) return true
+    } catch {
+      // 编码失败，忽略
+    }
+    // 4. 尝试双重解码（处理双重编码的情况）
+    try {
+      const doubleDecoded = decodeURIComponent(decodedId)
+      if (n.slug === doubleDecoded) return true
+    } catch {
+      // 解码失败，忽略
+    }
+    return false
+  })
+  
+  const news = allNews.find((n: News) => {
+    // 1. 精确匹配原始 slug（Next.js 可能已经解码）
+    if (n.slug === rawId) return true
+    // 2. 匹配解码后的 slug（处理 URL 编码）
+    if (n.slug === decodedId) return true
+    // 3. 尝试编码匹配（以防 Next.js 自动编码了）
+    try {
+      if (n.slug === encodeURIComponent(rawId)) return true
+    } catch {
+      // 编码失败，忽略
+    }
+    // 4. 尝试双重解码（处理双重编码的情况）
+    try {
+      const doubleDecoded = decodeURIComponent(decodedId)
+      if (n.slug === doubleDecoded) return true
+    } catch {
+      // 解码失败，忽略
+    }
+    return false
+  })
   
   if (!note && !news) {
+    // 如果还是找不到，输出详细错误信息
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[笔记详情页] 未找到内容:', {
+        rawId,
+        decodedId,
+        availableNoteSlugs: allNotes.map((n: Note) => n.slug),
+        availableNewsSlugs: allNews.map((n: News) => n.slug),
+      })
+    }
     notFound()
   }
 
