@@ -9,7 +9,8 @@ import { useState, useEffect } from 'react'
 // 暂时注释掉 next-auth（支付功能暂不开发）
 // import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Crown, Check, Loader2 } from '@/components/界面组件/图标'
+// 直接从 lucide-react 导入图标（避免图标组件导出问题）
+import { Crown, Check, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface SubscriptionPlan {
@@ -54,12 +55,17 @@ const plans: SubscriptionPlan[] = [
 ]
 
 export default function SubscribePage() {
-  const { data: session, status } = useSession()
+  // 暂时注释掉 useSession（支付功能暂不开发）
+  // const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [subscription, setSubscription] = useState<any>(null)
+  const [status] = useState<'unauthenticated'>('unauthenticated')
+  const session = null
 
   useEffect(() => {
+    // 暂时注释掉认证检查（支付功能暂不开发）
+    /*
     if (status === 'unauthenticated') {
       router.push('/登录?redirect=/订阅')
       return
@@ -76,13 +82,17 @@ export default function SubscribePage() {
         })
         .catch(console.error)
     }
+    */
   }, [status, router])
 
   const handleSubscribe = async (planType: 'monthly' | 'yearly') => {
+    // 暂时注释掉认证检查（支付功能暂不开发）
+    /*
     if (!session) {
       router.push('/登录?redirect=/订阅')
       return
     }
+    */
 
     setLoading(true)
     try {

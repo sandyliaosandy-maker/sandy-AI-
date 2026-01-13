@@ -12,6 +12,8 @@
 // import { verifyPassword } from '@/lib/password'
 // import type { User } from '@/lib/db/schema'
 
+// 暂时注释掉所有导出（支付功能暂不开发）
+/*
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -104,3 +106,13 @@ export const authOptions: NextAuthOptions = {
 const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
+*/
+
+// 暂时提供空的导出（支付功能暂不开发）
+export async function GET() {
+  return new Response('Not implemented', { status: 501 })
+}
+
+export async function POST() {
+  return new Response('Not implemented', { status: 501 })
+}
