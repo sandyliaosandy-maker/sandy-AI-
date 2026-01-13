@@ -11,7 +11,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 // 直接从 lucide-react 导入图标（避免图标组件导出问题）
 import { Crown, Check, Loader2 } from 'lucide-react'
-import Link from 'next/link'
+// 暂时注释掉 Link（支付功能暂不开发）
+// import Link from 'next/link'
 
 interface SubscriptionPlan {
   id: 'monthly' | 'yearly'
@@ -61,7 +62,7 @@ export default function SubscribePage() {
   const [loading, setLoading] = useState(false)
   // 暂时注释掉 subscription（支付功能暂不开发）
   // const [subscription, setSubscription] = useState<{ status: string; planType: string; currentPeriodEnd?: string } | null>(null)
-  const subscription: { status: string; planType: string; currentPeriodEnd?: string } | null = null
+  // const subscription: { status: string; planType: string; currentPeriodEnd?: string } | null = null
   const [status] = useState<'unauthenticated'>('unauthenticated')
   // 暂时注释掉 session（支付功能暂不开发）
   // const session = null
