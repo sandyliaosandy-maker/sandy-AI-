@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+// 暂时注释掉 useRouter（支付功能暂不开发）
+// import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 // 暂时注释掉 next-auth（支付功能暂不开发）
 // import { signIn } from 'next-auth/react'
