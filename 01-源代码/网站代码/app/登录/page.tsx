@@ -20,6 +20,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      // 暂时注释掉登录功能（支付功能暂不开发）
+      /*
       const result = await signIn('credentials', {
         email,
         password,
@@ -33,6 +35,9 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       }
+      */
+      // 暂时显示提示信息
+      setError('登录功能暂未开放，请稍后再试')
     } catch (err) {
       setError('登录失败，请重试')
     } finally {
