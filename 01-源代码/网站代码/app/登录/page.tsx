@@ -8,7 +8,8 @@ import Link from 'next/link'
 import { Loader2, Mail, Lock } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
+  // 暂时注释掉 router（支付功能暂不开发）
+  // const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
