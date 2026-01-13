@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // import { hashPassword, checkPasswordStrength } from '@/lib/password'
 // import { signIn } from 'next-auth/react'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(_request: NextRequest) {
   // 暂时返回未实现（支付功能暂不开发）
   return NextResponse.json(
