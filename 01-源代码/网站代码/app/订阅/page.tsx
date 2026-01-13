@@ -118,7 +118,9 @@ export default function SubscribePage() {
     }
   }
 
-  if (status === 'loading') {
+  // 暂时注释掉加载状态检查（支付功能暂不开发）
+  // if (status === 'loading') {
+  if (false) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-6xl">
         <div className="flex items-center justify-center">
@@ -128,7 +130,9 @@ export default function SubscribePage() {
     )
   }
 
-  if (!session) {
+  // 暂时注释掉认证检查（支付功能暂不开发）
+  // if (!session) {
+  if (false) {
     return null // 会重定向到登录页
   }
 
