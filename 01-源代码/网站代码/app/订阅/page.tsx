@@ -59,9 +59,12 @@ export default function SubscribePage() {
   // const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [subscription, setSubscription] = useState<any>(null)
+  // 暂时注释掉 subscription（支付功能暂不开发）
+  // const [subscription, setSubscription] = useState<{ status: string; planType: string; currentPeriodEnd?: string } | null>(null)
+  const subscription = null
   const [status] = useState<'unauthenticated'>('unauthenticated')
-  const session = null
+  // 暂时注释掉 session（支付功能暂不开发）
+  // const session = null
 
   useEffect(() => {
     // 暂时注释掉认证检查（支付功能暂不开发）
