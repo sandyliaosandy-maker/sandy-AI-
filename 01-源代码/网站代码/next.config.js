@@ -53,6 +53,24 @@ const nextConfig = {
         source: '/周报/:slug*',
         destination: '/newsletter/:slug*',
       },
+      {
+        /**
+         * 将英文路径 /notes 重定向到中文路径 /笔记
+         * 原因：提供英文路径别名，避免中文路径编码问题
+         * 这样可以同时支持 /笔记 和 /notes 两种访问方式
+         */
+        source: '/notes',
+        destination: '/笔记',
+      },
+      {
+        /**
+         * 将英文路径 /notes/:id* 重定向到中文路径 /笔记/:id*
+         * 原因：提供英文路径别名，避免中文路径编码问题
+         * 这样可以同时支持 /笔记/:id 和 /notes/:id 两种访问方式
+         */
+        source: '/notes/:id*',
+        destination: '/笔记/:id*',
+      },
     ]
   },
   
