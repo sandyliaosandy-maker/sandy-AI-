@@ -72,7 +72,9 @@ export default function RegisterPage() {
         return
       }
 
+      // 暂时注释掉自动登录（支付功能暂不开发）
       // 注册成功后自动登录
+      /*
       const signInResult = await signIn('credentials', {
         email,
         password,
@@ -86,6 +88,10 @@ export default function RegisterPage() {
         router.push('/')
         router.refresh()
       }
+      */
+      // 暂时直接跳转到登录页
+      setError('注册功能暂未开放，请稍后再试')
+      router.push('/登录')
     } catch (err) {
       setError('注册失败，请重试')
     } finally {
