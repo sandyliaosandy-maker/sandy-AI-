@@ -139,8 +139,9 @@ export default function SubscribePage() {
     return null // 会重定向到登录页
   }
 
-  // 如果已有有效订阅
-  if (subscription && subscription.status === 'active') {
+  // 如果已有有效订阅（暂时注释掉，支付功能暂不开发）
+  // if (subscription && subscription.status === 'active') {
+  if (false) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
