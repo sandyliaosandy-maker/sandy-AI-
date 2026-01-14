@@ -93,6 +93,9 @@ export async function generateStaticParams() {
 }
 
 export default async function NoteDetailPage({ params }: PageProps) {
+  // 立即输出日志，确认页面是否被执行
+  console.log('[笔记详情页] 页面组件执行，params:', params)
+  
   // 处理 URL 参数（Next.js 可能已经解码，也可能没有）
   // 由于中文路径在 URL 中会被编码，需要尝试多种匹配方式
   const rawId = params.id
