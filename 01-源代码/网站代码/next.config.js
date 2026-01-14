@@ -53,6 +53,15 @@ const nextConfig = {
         source: '/周报/:slug*',
         destination: '/newsletter/:slug*',
       },
+      {
+        /**
+         * 将中文路径 /关于 重定向到英文路径 /about
+         * 原因：Next.js 在处理中文路径时可能存在编码问题
+         * 这样可以避免中文路径编码导致的 404 错误
+         */
+        source: '/关于',
+        destination: '/about',
+      },
       // 注释掉 /notes 的 rewrite 规则
       // 原因：我们已经创建了实际的 /notes 路由文件，不需要重定向
       // 这样可以避免 rewrite 规则干扰实际路由的匹配
