@@ -11,7 +11,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, Tag, ArrowLeft } from '@/components/界面组件/图标'
-import { allNotes, allNews, type News, type Note } from '../../../.contentlayer/generated'
+import type { News, Note } from '../../../.contentlayer/generated'
 import { MDXContent } from '@/components/内容组件/内容渲染'
 // 暂时注释掉付费内容相关功能（支付功能暂不开发）
 // import { PremiumBadge } from '@/components/内容组件/会员标签'
@@ -57,18 +57,52 @@ function PostMetadata({ post }: { post: News | Note }) {
   )
 }
 
+/**
+ * 获取笔记和新闻数据
+ * 使用动态导入避免构建时错误
+ */
+async function getContentData() {
+  try {
+    const { allNotes, allNews } = await import('../../../.contentlayer/generated')
+    return { allNotes: allNotes || [], allNews: allNews || [] }
+  } catch (error) {
+    console.error('[笔记详情页] Contentlayer 导入错误:', error)
+    return { allNotes: [], allNews: [] }
+  }
+}
+
+/**
+ * 生成静态路径参数
+ * Next.js 在构建时会为每个笔记和新闻生成静态页面
+ * 
+ * @returns 所有笔记和新闻的 id 数组，用于静态生成
+ */
 export async function generateStaticParams() {
+  const { allNotes, allNews } = await getContentData()
+  
   // 生成所有笔记和新闻的静态路径
-  const noteParams = allNotes.map((note: Note) => ({
-    id: note.slug,
-  }))
-  const newsParams = allNews.map((news: News) => ({
-    id: news.slug,
-  }))
+  // Next.js 会自动处理 URL 编码，所以直接使用 slug 即可
+  const noteParams = allNotes.map((note: Note) => {
+    // 确保 slug 是正确的字符串，避免 undefined
+    const slug = note.slug || ''
+    return {
+      id: slug,
+    }
+  })
+  const newsParams = allNews.map((news: News) => {
+    // 确保 slug 是正确的字符串，避免 undefined
+    const slug = news.slug || ''
+    return {
+      id: slug,
+    }
+  })
   return [...noteParams, ...newsParams]
 }
 
 export default async function NoteDetailPage({ params }: PageProps) {
+  // 获取笔记和新闻数据
+  const { allNotes, allNews } = await getContentData()
+  
   // 处理 URL 参数（Next.js 可能已经解码，也可能没有）
   // 由于中文路径在 URL 中会被编码，需要尝试多种匹配方式
   const rawId = params.id
