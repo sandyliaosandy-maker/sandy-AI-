@@ -17,7 +17,7 @@ export function Navbar({
   links = [
     { href: '/', label: 'Home' },
     { href: '/notes', label: 'Notes' },
-    { href: '/关于', label: 'About' },
+    { href: '/about', label: 'About' },
   ],
   className = '' 
 }: NavbarProps) {

@@ -20,7 +20,7 @@ export function Header() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/notes', label: 'Notes' },
-    { href: '/关于', label: 'About' },
+    { href: '/about', label: 'About' },
   ]
 
   return (
