@@ -36,16 +36,18 @@ async function getPages() {
  * - 支持静态生成（SSG）
  */
 export default async function AboutPage() {
+  // 立即输出日志，确认页面是否被执行
+  console.log('[关于页面] 页面组件执行')
+  
   // 获取页面数据
   const allPages = await getPages()
   
   // 调试信息（仅在开发环境）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[关于页面] 数据加载:', {
-      pagesCount: allPages.length,
-      pageSlugs: allPages.map((p: Page) => p.slug),
-    })
-  }
+  console.log('[关于页面] 数据加载:', {
+    pagesCount: allPages.length,
+    pageSlugs: allPages.map((p: Page) => p.slug),
+    pageTitles: allPages.map((p: Page) => p.title),
+  })
   
   // 查找 slug 为 '关于' 的页面
   const aboutPage = allPages.find((page: Page) => page.slug === '关于')
