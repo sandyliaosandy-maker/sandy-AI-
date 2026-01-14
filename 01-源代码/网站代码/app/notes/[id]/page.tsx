@@ -71,25 +71,34 @@ export const dynamicParams = true
  * @returns 所有笔记和新闻的 id 数组，用于静态生成
  */
 export async function generateStaticParams() {
-  // 生成所有笔记和新闻的静态路径
-  const noteParams = allNotes.map((note: Note) => ({
-    id: note.slug,
-  }))
-  const newsParams = allNews.map((news: News) => ({
-    id: news.slug,
-  }))
+  // 立即输出日志，确认函数是否被执行
+  console.log('[笔记详情页] generateStaticParams 开始执行')
   
-  // 调试信息（仅在开发环境）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[笔记详情页] generateStaticParams 执行:', {
+  try {
+    // 生成所有笔记和新闻的静态路径
+    const noteParams = allNotes.map((note: Note) => ({
+      id: note.slug,
+    }))
+    const newsParams = allNews.map((news: News) => ({
+      id: news.slug,
+    }))
+    
+    const allParams = [...noteParams, ...newsParams]
+    
+    // 调试信息
+    console.log('[笔记详情页] generateStaticParams 执行成功:', {
       notesCount: allNotes.length,
       newsCount: allNews.length,
       noteSlugs: allNotes.map((n: Note) => n.slug),
-      totalParams: noteParams.length + newsParams.length,
+      totalParams: allParams.length,
+      sampleParams: allParams.slice(0, 3),
     })
+    
+    return allParams
+  } catch (error) {
+    console.error('[笔记详情页] generateStaticParams 执行错误:', error)
+    return []
   }
-  
-  return [...noteParams, ...newsParams]
 }
 
 export default async function NoteDetailPage({ params }: PageProps) {
