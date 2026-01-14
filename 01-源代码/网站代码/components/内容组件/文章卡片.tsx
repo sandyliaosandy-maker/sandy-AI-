@@ -14,7 +14,7 @@ export function PostCard({ post, className = '' }: PostCardProps) {
   // Contentlayer 类型有 slug，占位数据有 id
   const slug = 'slug' in post ? post.slug : ('id' in post ? post.id : '')
   const isNote = 'source' in post || ('_id' in post && post._id.startsWith('Note'))
-  const href = isNote ? `/笔记/${slug}` : `/新闻/${slug}`
+  const href = isNote ? `/notes/${slug}` : `/新闻/${slug}`
 
   // 获取缩略图（Contentlayer 类型中没有 thumbnail，需要从 _raw 或其他地方获取）
   const thumbnail = 'thumbnail' in post ? post.thumbnail : undefined

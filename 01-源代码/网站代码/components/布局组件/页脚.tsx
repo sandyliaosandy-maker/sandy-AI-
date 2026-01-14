@@ -29,7 +29,7 @@ export function Footer() {
             <h3 className="font-semibold text-neutral-800 mb-4">链接</h3>
             <ul className="space-y-2 text-sm text-neutral-600">
               <li>
-                <Link href="/笔记" className="hover:text-neutral-800 transition-colors">
+                <Link href="/notes" className="hover:text-neutral-800 transition-colors">
                   笔记
                 </Link>
               </li>

@@ -16,7 +16,7 @@ interface NavbarProps {
 export function Navbar({ 
   links = [
     { href: '/', label: 'Home' },
-    { href: '/笔记', label: 'Notes' },
+    { href: '/notes', label: 'Notes' },
     { href: '/关于', label: 'About' },
   ],
   className = '' 

@@ -152,7 +152,7 @@ export default async function NoteDetailPage({ params }: PageProps) {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* 返回按钮 */}
       <Link
-        href={isNote ? '/笔记' : '/'}
+        href={isNote ? '/notes' : '/'}
         className="inline-flex items-center text-neutral-600 hover:text-neutral-800 mb-8 transition-colors"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />

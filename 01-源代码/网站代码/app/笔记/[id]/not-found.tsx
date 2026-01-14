@@ -9,7 +9,7 @@ export default function NotFound() {
       <p className="text-neutral-500 mb-8">
         抱歉，您访问的笔记不存在或已被删除。
       </p>
-      <Link href="/笔记">
+      <Link href="/notes">
         <Button variant="primary" size="md" icon="arrow">
           返回笔记列表
         </Button>

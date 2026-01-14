@@ -239,7 +239,7 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
         }
         
         // 如果有原始链接，使用原始链接；否则使用内部链接
-        const linkUrl = originalUrl || `/笔记/${item.slug}`
+        const linkUrl = originalUrl || `/notes/${item.slug}`
         const isExternalLink = !!originalUrl
 
         return (
