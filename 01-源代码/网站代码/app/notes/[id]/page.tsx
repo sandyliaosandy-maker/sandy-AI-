@@ -94,43 +94,69 @@ export default async function NoteDetailPage({ params }: PageProps) {
   // 尝试多种匹配方式，确保能找到对应的笔记或新闻
   // 这是因为 Next.js 在处理中文路径时，URL 编码可能不一致
   const note = allNotes.find((n: Note) => {
+    const noteSlug = n.slug
     // 1. 精确匹配原始 slug（Next.js 可能已经解码）
-    if (n.slug === rawId) return true
+    if (noteSlug === rawId) return true
     // 2. 匹配解码后的 slug（处理 URL 编码）
-    if (n.slug === decodedId) return true
-    // 3. 尝试编码匹配（以防 Next.js 自动编码了）
+    if (noteSlug === decodedId) return true
+    // 3. 尝试将 slug 编码后与原始参数匹配
     try {
-      if (n.slug === encodeURIComponent(rawId)) return true
+      if (encodeURIComponent(noteSlug) === rawId) return true
     } catch {
       // 编码失败，忽略
     }
-    // 4. 尝试双重解码（处理双重编码的情况）
+    // 4. 尝试将原始参数编码后与 slug 匹配
+    try {
+      if (noteSlug === encodeURIComponent(rawId)) return true
+    } catch {
+      // 编码失败，忽略
+    }
+    // 5. 尝试双重解码（处理双重编码的情况）
     try {
       const doubleDecoded = decodeURIComponent(decodedId)
-      if (n.slug === doubleDecoded) return true
+      if (noteSlug === doubleDecoded) return true
     } catch {
       // 解码失败，忽略
+    }
+    // 6. 尝试将 slug 编码后与解码后的参数匹配
+    try {
+      if (encodeURIComponent(noteSlug) === decodedId) return true
+    } catch {
+      // 编码失败，忽略
     }
     return false
   })
   
   const news = allNews.find((n: News) => {
+    const newsSlug = n.slug
     // 1. 精确匹配原始 slug（Next.js 可能已经解码）
-    if (n.slug === rawId) return true
+    if (newsSlug === rawId) return true
     // 2. 匹配解码后的 slug（处理 URL 编码）
-    if (n.slug === decodedId) return true
-    // 3. 尝试编码匹配（以防 Next.js 自动编码了）
+    if (newsSlug === decodedId) return true
+    // 3. 尝试将 slug 编码后与原始参数匹配
     try {
-      if (n.slug === encodeURIComponent(rawId)) return true
+      if (encodeURIComponent(newsSlug) === rawId) return true
     } catch {
       // 编码失败，忽略
     }
-    // 4. 尝试双重解码（处理双重编码的情况）
+    // 4. 尝试将原始参数编码后与 slug 匹配
+    try {
+      if (newsSlug === encodeURIComponent(rawId)) return true
+    } catch {
+      // 编码失败，忽略
+    }
+    // 5. 尝试双重解码（处理双重编码的情况）
     try {
       const doubleDecoded = decodeURIComponent(decodedId)
-      if (n.slug === doubleDecoded) return true
+      if (newsSlug === doubleDecoded) return true
     } catch {
       // 解码失败，忽略
+    }
+    // 6. 尝试将 slug 编码后与解码后的参数匹配
+    try {
+      if (encodeURIComponent(newsSlug) === decodedId) return true
+    } catch {
+      // 编码失败，忽略
     }
     return false
   })
