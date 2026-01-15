@@ -6,13 +6,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { getUserSubscription } from '@/lib/subscription'
-import { getOrCreateCustomer, createCheckoutSession, createPortalSession } from '@/lib/stripe'
-import { getDatabase } from '@/lib/db'
+import { getOrCreateCustomer, createCheckoutSession } from '@/lib/stripe'
+// createPortalSession 和 getDatabase 暂未使用，但保留以备将来使用
+// import { createPortalSession } from '@/lib/stripe'
+// import { getDatabase } from '@/lib/db'
 
 /**
  * GET - 获取用户订阅信息
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) {

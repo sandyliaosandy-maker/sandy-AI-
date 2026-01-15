@@ -7,6 +7,7 @@ import { DatabaseAdapter } from '../index'
 
 export async function createPostgresAdapter(databaseUrl: string): Promise<DatabaseAdapter> {
   // 动态导入 @vercel/postgres 或 pg
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pool: any
 
   try {
