@@ -11,7 +11,12 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const userId = searchParams.get('userId')
 
-    const targetUserId = userId || (await getCurrentUser())?.id
+    // 如果 URL 参数中没有 userId，尝试从当前登录用户获取
+    let targetUserId: string | null = userId
+    if (!targetUserId) {
+      const currentUser = await getCurrentUser()
+      targetUserId = currentUser?.id || null
+    }
 
     if (!targetUserId) {
       return NextResponse.json({

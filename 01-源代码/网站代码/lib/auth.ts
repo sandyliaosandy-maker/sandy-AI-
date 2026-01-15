@@ -9,13 +9,13 @@
 // import { getServerSession } from 'next-auth/next'
 // import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 // import { getDatabase } from './db'
-// import type { User } from './db/schema'
+import type { User } from './db/schema'
 
 /**
  * 获取当前登录用户
  * @returns 用户信息或 null
  */
-export async function getCurrentUser(): Promise<null> {
+export async function getCurrentUser(): Promise<User | null> {
   // 暂时返回 null（支付功能暂不开发）
   return null
   /*
