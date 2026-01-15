@@ -18,7 +18,7 @@ function getStripe(): Stripe {
       throw new Error('STRIPE_SECRET_KEY environment variable is not set. Payment features are disabled.')
     }
     stripeInstance = new Stripe(secretKey, {
-      apiVersion: '2024-11-20.acacia',
+      apiVersion: '2023-10-16',
       typescript: true,
     })
   }
