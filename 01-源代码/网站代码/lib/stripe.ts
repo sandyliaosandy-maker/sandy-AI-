@@ -1,17 +1,34 @@
 /**
  * Stripe 工具函数
  * 用于处理 Stripe 支付相关的操作
+ * 
+ * 注意：支付功能暂不开发，此文件仅作为占位符
+ * 如果需要在运行时使用，需要设置 STRIPE_SECRET_KEY 环境变量
  */
 
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+// 延迟初始化，避免在构建时因为没有环境变量而失败
+let stripeInstance: Stripe | null = null
+
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const secretKey = process.env.STRIPE_SECRET_KEY
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is not set. Payment features are disabled.')
+    }
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2024-11-20.acacia',
+      typescript: true,
+    })
+  }
+  return stripeInstance
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
-  typescript: true,
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    return getStripe()[prop as keyof Stripe]
+  },
 })
 
 /**
