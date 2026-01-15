@@ -8,7 +8,7 @@
 // 暂时注释掉相关导入（支付功能暂不开发）
 // import { getCurrentUser } from './auth'
 // import { getDatabase } from './db'
-// import type { Subscription } from './db/schema'
+import type { Subscription } from './db/schema'
 
 /**
  * 检查用户是否有有效的订阅
@@ -19,7 +19,7 @@
 export async function getUserSubscription(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _userId?: string
-): Promise<null> {
+): Promise<Subscription | null> {
   // 暂时返回 null（支付功能暂不开发）
   return null
   /*
