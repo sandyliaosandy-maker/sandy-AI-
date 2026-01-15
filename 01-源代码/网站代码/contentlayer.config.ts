@@ -176,6 +176,7 @@ export default makeSource({
 })
 // 触发 Contentlayer 重新生成 - 周报功能已添加 - 更新时间: 2026-01-07
 // 修复 slug 生成逻辑，移除 .md 扩展名 - 更新时间: 2026-01-07
+// 触发 Contentlayer 重新生成 - 更新时间: 2025-01-14 17:10
 
 
 

@@ -57,8 +57,14 @@ async function getNotes() {
  * 使用 async/await 获取 Contentlayer 数据，支持静态生成（SSG）。
  */
 export default async function NotesPage() {
+  // 调试日志：确认页面组件是否被执行
+  console.log('[笔记列表页 /notes] 页面组件执行')
+  
   // 获取笔记数据
   const allNotes = await getNotes()
+  
+  // 调试日志：输出获取到的笔记数量
+  console.log('[笔记列表页 /notes] 获取到笔记数量:', allNotes.length)
   
   // 使用 Contentlayer 数据（如果可用，否则使用占位数据）
   const notes = allNotes.length > 0

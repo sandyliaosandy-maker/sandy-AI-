@@ -11,6 +11,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Sandy的AI收藏夹',
   description: '个人知识库网站',
+  icons: {
+    icon: '/favicon.ico', // favicon 文件路径（如果存在）
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png', // Apple 设备图标（可选）
+  },
 }
 
 export default function RootLayout({

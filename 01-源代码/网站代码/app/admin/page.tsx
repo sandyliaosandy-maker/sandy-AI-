@@ -63,20 +63,37 @@ export default function AdminPage() {
     setLoading(true)
     setSyncResult(null)
     try {
+      console.log('[解析表格] 发送请求:', { obsidianPath, tableFile })
       const response = await fetch('/admin/api/parse-table', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ obsidianPath, tableFile }),
       })
+      
+      console.log('[解析表格] 响应状态:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('[解析表格] 响应错误:', errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+      
       const result = await response.json()
+      console.log('[解析表格] 解析结果:', result)
+      
       if (result.success) {
         setRows(result.data)
         setSyncResult(null)
+        console.log(`[解析表格] 成功解析 ${result.count || result.data?.length || 0} 条记录`)
       } else {
-        alert('解析失败: ' + result.error)
+        const errorMsg = result.error || '未知错误'
+        console.error('[解析表格] 解析失败:', errorMsg)
+        alert(`解析失败: ${errorMsg}`)
       }
     } catch (error) {
-      alert('解析失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      console.error('[解析表格] 异常:', error)
+      alert(`解析失败: ${errorMsg}\n\n请检查：\n1. Obsidian 路径是否正确\n2. 表格文件名是否正确\n3. 文件是否存在\n4. 查看浏览器控制台获取详细错误信息`)
     } finally {
       setLoading(false)
     }

@@ -288,9 +288,12 @@ function parseMarkdownTable(filePath: string): TableRow[] {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[API] 收到解析表格请求')
     const { obsidianPath, tableFile } = await request.json()
+    console.log('[API] 请求参数:', { obsidianPath, tableFile })
 
     if (!obsidianPath || !tableFile) {
+      console.error('[API] 缺少必需参数')
       return NextResponse.json(
         { success: false, error: '缺少必需参数：obsidianPath 或 tableFile' },
         { status: 400 }
@@ -298,7 +301,23 @@ export async function POST(request: NextRequest) {
     }
 
     const tableFilePath = path.join(obsidianPath, tableFile)
+    console.log('[API] 表格文件路径:', tableFilePath)
+    
+    // 检查文件是否存在
+    if (!fs.existsSync(tableFilePath)) {
+      console.error('[API] 文件不存在:', tableFilePath)
+      return NextResponse.json(
+        {
+          success: false,
+          error: `表格文件不存在: ${tableFilePath}\n\n请检查：\n1. Obsidian 路径是否正确\n2. 表格文件名是否正确\n3. 文件是否存在于指定路径`,
+        },
+        { status: 404 }
+      )
+    }
+
+    console.log('[API] 开始解析表格...')
     const rows = parseMarkdownTable(tableFilePath)
+    console.log(`[API] 解析完成，共 ${rows.length} 条记录`)
 
     // 添加 selected 字段
     const rowsWithSelection = rows.map((row) => ({
@@ -312,10 +331,13 @@ export async function POST(request: NextRequest) {
       count: rowsWithSelection.length,
     })
   } catch (error) {
+    console.error('[API] 解析表格错误:', error)
+    const errorMessage = error instanceof Error ? error.message : '未知错误'
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : '未知错误',
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     )
