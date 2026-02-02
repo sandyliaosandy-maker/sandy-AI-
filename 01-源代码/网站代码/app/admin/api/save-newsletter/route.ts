@@ -13,7 +13,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
+import { execSync } from 'child_process'
 import { promisify } from 'util'
+import { revalidatePath } from 'next/cache'
 
 const writeFile = promisify(fs.writeFile)
 const mkdir = promisify(fs.mkdir)
@@ -32,6 +34,26 @@ async function ensureDir(dirPath: string): Promise<void> {
       throw error
     }
   }
+}
+
+/**
+ * 获取网站内容根目录（与 Contentlayer、同步到线上 使用同一路径）
+ * - 若当前 cwd 已是网站代码目录（含 内容 与 contentlayer.config.ts），用 cwd
+ * - 否则若 cwd 为工作区根（含 01-源代码/网站代码/内容），用 01-源代码/网站代码
+ * 这样无论从「网站代码」还是「Sandy的AI收藏夹」启动 dev，都写入同一目录
+ */
+function getContentRoot(): string {
+  const cwd = process.cwd()
+  const hasContentHere = fs.existsSync(path.join(cwd, '内容'))
+  const hasConfigHere = fs.existsSync(path.join(cwd, 'contentlayer.config.ts'))
+  if (hasContentHere && hasConfigHere) {
+    return cwd
+  }
+  const nested = path.join(cwd, '01-源代码', '网站代码')
+  if (fs.existsSync(path.join(nested, '内容'))) {
+    return nested
+  }
+  return cwd
 }
 
 /**
@@ -74,9 +96,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 生成文件名
+    // 生成文件名，并写入与 Contentlayer / 同步到线上 一致的内容目录
+    const contentRoot = getContentRoot()
     const fileName = `${generateFileName(title)}.md`
-    const newsletterDir = path.join(process.cwd(), '内容', '公开内容', '周报')
+    const newsletterDir = path.join(contentRoot, '内容', '公开内容', '周报')
     await ensureDir(newsletterDir)
     const filePath = path.join(newsletterDir, fileName)
 
@@ -150,15 +173,51 @@ export async function POST(request: NextRequest) {
     // 写入文件
     await writeFile(filePath, content, 'utf-8')
 
+    // 1) 修改 config 文件，让 dev 下的 watch 也能检测到
+    try {
+      const configPath = path.join(contentRoot, 'contentlayer.config.ts')
+      let raw = fs.readFileSync(configPath, 'utf-8')
+      raw = raw.replace(/\n\/\/ 周报已保存，触发重新生成 - \d+\n?$/g, '')
+      fs.writeFileSync(configPath, raw + `\n// 周报已保存，触发重新生成 - ${Date.now()}\n`, 'utf-8')
+    } catch (e) {
+      console.warn('[周报] 轻触 config 失败:', e)
+    }
+
+    // 2) 立即执行 Contentlayer 生成，保证首页刷新时数据已更新
+    let buildOk = false
+    let buildError: string | null = null
+    try {
+      execSync('npx contentlayer build', {
+        cwd: contentRoot,
+        encoding: 'utf-8',
+        timeout: 60000,
+        stdio: 'pipe',
+      })
+      buildOk = true
+    } catch (e) {
+      const err = e as { message?: string; stderr?: string; stdout?: string }
+      buildError = err.message || String(err)
+      if (err.stderr) buildError += ` stderr: ${err.stderr.slice(0, 500)}`
+      if (err.stdout) buildError += ` stdout: ${err.stdout.slice(0, 300)}`
+      console.warn('[周报] contentlayer build 失败:', buildError)
+    }
+
+    // 使首页与周报列表下次请求时重新拉取数据
+    revalidatePath('/')
+    revalidatePath('/newsletter/[slug]')
+
     // 调试日志（仅在开发环境）
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[周报] 保存成功: ${filePath}`)
+      console.log(`[周报] 保存成功 contentRoot=${contentRoot} filePath=${filePath} buildOk=${buildOk}`)
     }
 
     return NextResponse.json({
       success: true,
       filePath,
       fileName,
+      contentRoot,
+      contentlayerBuildOk: buildOk,
+      contentlayerBuildError: buildError ?? undefined,
     })
   } catch (error) {
     console.error('[周报] 保存错误:', error)

@@ -232,9 +232,15 @@ async function syncFiles(
   // 确保目标目录存在
   await ensureDir(config.projectContentPath)
 
-  for (const row of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
     try {
-      console.log(`[同步] 处理条目: ${row.title || row.filePath}`)
+      // 每处理100条记录输出一次进度
+      if (i % 100 === 0) {
+        console.log(`[同步] 进度: ${i}/${rows.length} (${Math.round((i / rows.length) * 100)}%)`)
+      }
+      
+      console.log(`[同步] 处理条目 ${i + 1}/${rows.length}: ${row.title || row.filePath}`)
       
       // 生成目标文件路径
       const targetPath = getTargetFilePath(
@@ -248,37 +254,55 @@ async function syncFiles(
       // 检查必需字段
       if (!row.title && !row.filePath) {
         stats.skippedFiles++
-        stats.errors.push(`条目缺少标题和文件路径: ${JSON.stringify(row)}`)
+        const errorMsg = `条目缺少标题和文件路径: ${JSON.stringify(row).substring(0, 200)}`
+        stats.errors.push(errorMsg)
+        console.warn(`[同步] 跳过: ${errorMsg}`)
         continue
       }
       
       if (!row.date) {
         stats.skippedFiles++
-        stats.errors.push(`条目缺少日期: ${row.title || row.filePath}`)
+        const errorMsg = `条目缺少日期: ${row.title || row.filePath}`
+        stats.errors.push(errorMsg)
+        console.warn(`[同步] 跳过: ${errorMsg}`)
         continue
       }
 
       // 确保目标目录存在
-      await ensureDir(path.dirname(targetPath))
+      const targetDir = path.dirname(targetPath)
+      await ensureDir(targetDir)
 
       // 生成 Markdown 内容
       const markdownContent = generateMarkdownContent(row)
       
-      // 调试：输出生成的内容预览
-      console.log(`[同步] 生成内容预览 (前200字符):`, markdownContent.substring(0, 200))
+      // 调试：输出生成的内容预览（仅前几条）
+      if (i < 3) {
+        console.log(`[同步] 生成内容预览 (前200字符):`, markdownContent.substring(0, 200))
+      }
       
       // 写入文件
       const writeFile = promisify(fs.writeFile)
       await writeFile(targetPath, markdownContent, 'utf-8')
       
-      console.log(`[同步] 文件创建成功: ${targetPath}`)
+      if (i < 10 || (i + 1) % 50 === 0) {
+        console.log(`[同步] 文件创建成功 (${i + 1}/${rows.length}): ${targetPath}`)
+      }
       stats.syncedFiles++
     } catch (error) {
       stats.skippedFiles++
       const errorMessage =
         error instanceof Error ? error.message : String(error)
-      stats.errors.push(`同步失败 ${row.title || row.filePath}: ${errorMessage}`)
-      console.error(`[同步] 错误:`, error)
+      const errorDetails = error instanceof Error && error.stack 
+        ? `${errorMessage}\n${error.stack.substring(0, 200)}`
+        : errorMessage
+      stats.errors.push(`同步失败 ${i + 1}/${rows.length} ${row.title || row.filePath}: ${errorDetails}`)
+      console.error(`[同步] 错误 (${i + 1}/${rows.length}):`, error)
+      
+      // 如果错误太多，限制错误列表长度
+      if (stats.errors.length > 50) {
+        stats.errors.push(`... 还有 ${rows.length - i - 1} 个错误未显示`)
+        break
+      }
     }
   }
 

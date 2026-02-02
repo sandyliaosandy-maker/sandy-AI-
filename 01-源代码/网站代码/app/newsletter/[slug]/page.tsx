@@ -1,166 +1,163 @@
 /**
  * 周报详情页
  * 路径: /newsletter/[slug]
- * 
- * 功能：
- * - 显示周报的完整内容，包括封面图、标题、元信息、卷首语和包含的内容列表
- * - 支持静态生成，提升性能
- * - 处理中文路径的 URL 编码问题
+ * - 优先从 Contentlayer 查找；找不到则从 内容/公开内容/周报/*.md 按 slug 回退
+ * - slug 匹配时忽略全角冒号差异（ep03： 与 ep03 视为同一条）
  */
+import * as fs from 'fs'
+import * as path from 'path'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Calendar, Tag, ArrowLeft } from '@/components/界面组件/图标'
 import { allNewsletters, allNews, allNotes, type Newsletter, type News, type Note } from '../../../.contentlayer/generated'
 import { MDXContent } from '@/components/内容组件/内容渲染'
 import NewsletterContentList from '@/components/内容组件/周报内容列表'
 import NewsletterAnalytics from '@/components/内容组件/周报访问统计'
 
-/**
- * 从新闻和笔记中提取原始链接
- * 返回一个映射对象：slug -> sourceUrl
- */
+/** 统一 slug 比较：去掉全角冒号，便于「ep03：」与「ep03」匹配 */
+function normalizeSlug(s: string): string {
+  return (s || '').replace(/\uFF1A/g, '')
+}
+
 function extractSourceUrls(allNews: News[], allNotes: Note[]): Record<string, string> {
   const urlMap: Record<string, string> = {}
-  
-  // 处理新闻
   allNews.forEach((news) => {
-    // 优先使用 sourceUrl 字段
-    if ('sourceUrl' in news && news.sourceUrl) {
-      urlMap[news.slug] = news.sourceUrl as string
-    } else if (news.body && 'raw' in news.body) {
-      // 从正文中提取第一个链接（通常在"## 原标题"部分）
+    if ('sourceUrl' in news && news.sourceUrl) urlMap[news.slug] = news.sourceUrl as string
+    else if (news.body && 'raw' in news.body) {
       const bodyRaw = news.body.raw as string
       const linkMatch = bodyRaw.match(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/)
-      if (linkMatch && linkMatch[2]) {
-        urlMap[news.slug] = linkMatch[2]
-      }
+      if (linkMatch?.[2]) urlMap[news.slug] = linkMatch[2]
     }
   })
-  
-  // 处理笔记（如果有 sourceUrl）
   allNotes.forEach((note) => {
-    if ('sourceUrl' in note && note.sourceUrl) {
-      urlMap[note.slug] = note.sourceUrl as string
-    }
+    if ('sourceUrl' in note && note.sourceUrl) urlMap[note.slug] = note.sourceUrl as string
   })
-  
   return urlMap
 }
 
-interface PageProps {
-  params: {
-    slug: string // URL 中的 slug 参数，可能是编码后的中文
+function getNewsletterDirCandidates(): string[] {
+  const cwd = process.cwd()
+  return [
+    path.join(cwd, '内容', '公开内容', '周报'),
+    path.join(cwd, '01-源代码', '网站代码', '内容', '公开内容', '周报'),
+  ].filter((p, i, a) => a.indexOf(p) === i)
+}
+
+function parseFrontmatter(block: string): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const line of block.split(/\r?\n/)) {
+    const m = line.match(/^(\w+):\s*(.*)$/)
+    if (!m) continue
+    const [, key, value] = m
+    let v: unknown = value.trim()
+    if (value.startsWith('"') && value.endsWith('"')) v = value.slice(1, -1).replace(/\\"/g, '"')
+    else if (value.startsWith("'") && value.endsWith("'")) v = value.slice(1, -1)
+    else if (value === 'true') v = true
+    else if (value === 'false') v = false
+    else if (/^\d{4}-\d{2}-\d{2}/.test(value)) v = value
+    out[key] = v
   }
+  return out
 }
 
-/**
- * 生成静态路径参数
- * Next.js 在构建时会为每个周报生成静态页面
- * 
- * @returns 所有周报的 slug 数组，用于静态生成
- */
-export async function generateStaticParams() {
-  return allNewsletters.map((newsletter: Newsletter) => {
-    // 确保 slug 是正确的字符串，避免 undefined
-    const slug = newsletter.slug || ''
-    return {
-      slug: slug,
+/** 从磁盘按 slug 查找并解析周报；找不到返回 null */
+function getNewsletterFromFs(decodedSlug: string): {
+  slug: string
+  title: string
+  date: string
+  coverImage?: string
+  tags: string[]
+  includedItems: string
+  bodyRaw: string
+} | null {
+  const normalized = normalizeSlug(decodedSlug)
+  const candidates = getNewsletterDirCandidates()
+
+  for (const dir of candidates) {
+    if (!fs.existsSync(dir)) continue
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.md'))
+    for (const file of files) {
+      const fileSlug = path.basename(file, '.md')
+      if (normalizeSlug(fileSlug) !== normalized) continue
+      try {
+        const raw = fs.readFileSync(path.join(dir, file), 'utf-8')
+        const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
+        const fm = match ? parseFrontmatter(match[1]) : {}
+        const bodyRaw = match ? match[2].trim() : ''
+        return {
+          slug: fileSlug,
+          title: (fm.title as string) ?? fileSlug,
+          date: (fm.date as string) ?? '',
+          coverImage: fm.coverImage as string | undefined,
+          tags: Array.isArray(fm.tags) ? (fm.tags as string[]) : [],
+          includedItems: typeof fm.includedItems === 'string' ? fm.includedItems : '[]',
+          bodyRaw,
+        }
+      } catch {
+        continue
+      }
     }
-  })
+  }
+  return null
 }
 
-/**
- * 周报详情页组件
- * 
- * @param params - 路由参数，包含 slug
- * @returns 周报详情页的 JSX
- */
-export default function NewsletterPage({ params }: PageProps) {
-  // 处理 URL 参数（Next.js 可能已经解码，也可能没有）
-  // 由于中文路径在 URL 中会被编码，需要尝试多种匹配方式
+interface PageProps {
+  params: { slug: string }
+}
+
+export default async function NewsletterPage({ params }: PageProps) {
   const rawSlug = params.slug
   let decodedSlug: string
   try {
-    // 尝试解码 URL 参数（处理中文路径编码）
     decodedSlug = decodeURIComponent(rawSlug)
   } catch {
-    // 如果解码失败，使用原始值
     decodedSlug = rawSlug
   }
-  
-  // 调试信息（仅在开发环境）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[周报详情页] 参数:', {
-      rawSlug,
-      decodedSlug,
-      allSlugs: allNewsletters.map((n: Newsletter) => n.slug),
-      allTitles: allNewsletters.map((n: Newsletter) => n.title),
-    })
-  }
-  
-  // 尝试多种匹配方式，确保能找到对应的周报
-  // 这是因为 Next.js 在处理中文路径时，URL 编码可能不一致
-  const newsletter = allNewsletters.find((n: Newsletter) => {
-    // 1. 精确匹配原始 slug（Next.js 可能已经解码）
-    if (n.slug === rawSlug) return true
-    // 2. 匹配解码后的 slug（处理 URL 编码）
-    if (n.slug === decodedSlug) return true
-    // 3. 尝试编码匹配（以防 Next.js 自动编码了）
+
+  const normalized = normalizeSlug(decodedSlug)
+  let newsletter: Newsletter | null = allNewsletters.find((n: Newsletter) => {
+    if (n.slug === rawSlug || n.slug === decodedSlug) return true
+    if (normalizeSlug(n.slug) === normalized) return true
     try {
       if (n.slug === encodeURIComponent(rawSlug)) return true
     } catch {
-      // 编码失败，忽略
-    }
-    // 4. 尝试双重解码（处理双重编码的情况）
-    try {
-      const doubleDecoded = decodeURIComponent(decodedSlug)
-      if (n.slug === doubleDecoded) return true
-    } catch {
-      // 解码失败，忽略
+      // ignore
     }
     return false
-  })
+  }) as Newsletter | null
 
+  let fromFs: ReturnType<typeof getNewsletterFromFs> = null
   if (!newsletter) {
-    // 如果还是找不到，输出详细错误信息
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[周报详情页] 未找到周报:', {
-        rawSlug,
-        decodedSlug,
-        availableSlugs: allNewsletters.map((n: Newsletter) => n.slug),
-      })
-    }
-    notFound()
+    fromFs = getNewsletterFromFs(decodedSlug)
+    if (!fromFs) notFound()
   }
 
-  const formattedDate = new Date(newsletter.date as string).toLocaleDateString('zh-CN', {
+  const slug = newsletter ? newsletter.slug : fromFs!.slug
+  const title = newsletter ? (newsletter.title as string) : fromFs!.title
+  const dateStr = newsletter ? (newsletter.date as string) : fromFs!.date
+  const coverImage = newsletter ? newsletter.coverImage : fromFs!.coverImage
+  const tags = newsletter ? (newsletter.tags || []) : fromFs!.tags
+  const includedItems = newsletter ? (newsletter.includedItems || '[]') : fromFs!.includedItems
+
+  const formattedDate = new Date(dateStr || '').toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
 
-  // 调试信息（仅在开发环境）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[周报详情页] 周报信息:', {
-      title: newsletter.title,
-      slug: newsletter.slug,
-      hasIncludedItems: !!newsletter.includedItems,
-      includedItemsLength: newsletter.includedItems?.length,
-    })
-  }
+  const sourceUrlMap = extractSourceUrls(allNews, allNotes)
 
   return (
     <div className="min-h-screen bg-white">
-      {/* 访问统计埋点 */}
-      <NewsletterAnalytics newsletterSlug={newsletter.slug} />
-      
-      {/* 封面图 */}
-      {newsletter.coverImage && (
+      <NewsletterAnalytics newsletterSlug={slug} />
+      {coverImage && (
         <div className="relative w-full h-96 md:h-[500px]">
           <Image
-            src={newsletter.coverImage}
-            alt={newsletter.title}
+            src={coverImage}
+            alt={title}
             fill
             sizes="100vw"
             className="object-cover"
@@ -168,9 +165,7 @@ export default function NewsletterPage({ params }: PageProps) {
           />
         </div>
       )}
-
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* 返回按钮 */}
         <Link
           href="/"
           className="inline-flex items-center text-neutral-600 hover:text-neutral-800 mb-8 transition-colors"
@@ -178,22 +173,17 @@ export default function NewsletterPage({ params }: PageProps) {
           <ArrowLeft className="mr-2 h-4 w-4" />
           返回首页
         </Link>
-
-        {/* 标题和元信息 */}
         <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-6">
-            {newsletter.title}
-          </h1>
-
+          <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-6">{title}</h1>
           <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <time>{formattedDate}</time>
             </div>
-            {newsletter.tags.length > 0 && (
+            {tags.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
                 <Tag className="h-4 w-4" />
-                {newsletter.tags.map((tag: string) => (
+                {tags.map((tag: string) => (
                   <span
                     key={tag}
                     className="px-2 py-1 bg-primary-blue/20 text-primary-blue rounded-full"
@@ -206,50 +196,33 @@ export default function NewsletterPage({ params }: PageProps) {
           </div>
         </header>
 
-        {/* 卷首语 */}
-        {(() => {
-          // 优先使用 editorialContent 字段
-          if (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) {
-            return (
-              <section className="mb-12 prose prose-lg max-w-none">
-                <MDXContent code={newsletter.editorialContent.code} />
-              </section>
-            )
-          }
-          
-          // 如果没有 editorialContent，尝试从 body 中提取（兼容旧格式）
-          // 提取 body 中"## 本期内容"之前的部分作为卷首语
-          if (newsletter.body && 'code' in newsletter.body && newsletter.body.code) {
-            const bodyRaw = ('raw' in newsletter.body ? newsletter.body.raw : '') || ''
-            if (bodyRaw.trim()) {
-              // 显示整个 body（包含卷首语和"## 本期内容"部分）
-              // 注意：这可能会显示"## 本期内容"部分，但至少能显示卷首语
-              return (
-                <section className="mb-12 prose prose-lg max-w-none">
-                  <MDXContent code={newsletter.body.code} />
-                </section>
-              )
-            }
-          }
-          
-          return null
-        })()}
+        {/* 卷首语 / 正文 */}
+        {fromFs ? (
+          fromFs.bodyRaw ? (
+            <section className="mb-12 prose prose-lg max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{fromFs.bodyRaw}</ReactMarkdown>
+            </section>
+          ) : null
+        ) : newsletter && (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) ? (
+          <section className="mb-12 prose prose-lg max-w-none">
+            <MDXContent code={newsletter.editorialContent.code} />
+          </section>
+        ) : newsletter?.body && 'code' in newsletter.body && newsletter.body.code ? (
+          <section className="mb-12 prose prose-lg max-w-none">
+            <MDXContent code={newsletter.body.code} />
+          </section>
+        ) : null}
 
-        {/* 分隔线 */}
         <hr className="my-12 border-neutral-200" />
-
-        {/* 内容列表 */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-neutral-800 mb-8">本期内容</h2>
-          <NewsletterContentList 
-            includedItems={newsletter.includedItems || '[]'} 
+          <NewsletterContentList
+            includedItems={includedItems}
             allNews={allNews}
             allNotes={allNotes}
-            sourceUrlMap={extractSourceUrls(allNews, allNotes)}
+            sourceUrlMap={sourceUrlMap}
           />
         </section>
-
-        {/* 底部导航 */}
         <div className="mt-12 pt-8 border-t border-neutral-200">
           <Link
             href="/"

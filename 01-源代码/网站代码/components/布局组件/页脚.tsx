@@ -5,19 +5,19 @@ export function Footer() {
 
   return (
     <footer className="bg-neutral-100 mt-16 py-8">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* 关于 */}
           <div>
-            <h3 className="font-semibold text-neutral-800 mb-4">关于</h3>
+            <h3 className="font-semibold text-neutral-800 mb-4 text-sm uppercase tracking-wide">关于</h3>
             <ul className="space-y-2 text-sm text-neutral-600">
               <li>
-                <Link href="/about" className="hover:text-neutral-800 transition-colors">
+                <Link href="/about" className="hover:text-primary-blue transition-colors">
                   关于我们
                 </Link>
               </li>
               <li>
-                <Link href="/" className="hover:text-neutral-800 transition-colors">
+                <Link href="/" className="hover:text-primary-blue transition-colors">
                   首页
                 </Link>
               </li>
@@ -26,10 +26,10 @@ export function Footer() {
 
           {/* 链接 */}
           <div>
-            <h3 className="font-semibold text-neutral-800 mb-4">链接</h3>
+            <h3 className="font-semibold text-neutral-800 mb-4 text-sm uppercase tracking-wide">链接</h3>
             <ul className="space-y-2 text-sm text-neutral-600">
               <li>
-                <Link href="/notes" className="hover:text-neutral-800 transition-colors">
+                <Link href="/notes" className="hover:text-primary-blue transition-colors">
                   笔记
                 </Link>
               </li>
@@ -38,7 +38,7 @@ export function Footer() {
                   href="https://zerodaybook.mikecrm.com/F10LaP5"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-neutral-800 transition-colors"
+                  className="hover:text-primary-blue transition-colors"
                 >
                   订阅
                 </a>
@@ -48,7 +48,7 @@ export function Footer() {
 
           {/* 联系 */}
           <div>
-            <h3 className="font-semibold text-neutral-800 mb-4">联系</h3>
+            <h3 className="font-semibold text-neutral-800 mb-4 text-sm uppercase tracking-wide">联系</h3>
             <p className="text-sm text-neutral-600">
               通过邮件或社交媒体联系我们
             </p>

@@ -1,116 +1,223 @@
 /**
- * 首页组件
- * 
- * 功能：
- * - 显示所有已发布的周报列表
- * - 按日期倒序排列（最新的在前）
- * - 支持空状态显示（没有周报时显示提示信息）
- * - 响应式布局，适配不同屏幕尺寸
+ * 首页：Hero（最新一期）+ 往期周报横向列表 + 周报网格
  */
+import * as fs from 'fs'
+import * as path from 'path'
+import Link from 'next/link'
+import Image from 'next/image'
 import { NewsletterList } from '@/components/内容组件/周报列表'
+import { NewsletterHorizontalCard } from '@/components/内容组件/周报横向卡片'
+import type { NewsletterDisplay } from '@/components/内容组件/周报卡片'
 
-/**
- * 获取周报数据
- * 
- * 功能：
- * - 动态导入 Contentlayer 生成的数据
- * - 处理生成文件不存在或导入失败的情况
- * - 返回周报数组，如果导入失败则返回空数组
- * 
- * @returns {Promise<Array>} 周报数组，如果导入失败则返回空数组
- * 
- * @remarks
- * 使用动态导入（dynamic import）而不是静态导入，原因：
- * 1. Contentlayer 生成的文件可能在构建时不存在
- * 2. 开发模式下，Contentlayer 会在文件变化时重新生成
- * 3. 动态导入可以优雅地处理文件不存在的情况
- */
-async function getNewsletters() {
-  try {
-    // 动态导入 Contentlayer 生成的数据
-    // webpack 别名配置会将此路径解析为 .contentlayer/generated/index.mjs
-    const { allNewsletters } = await import('../.contentlayer/generated')
-    return allNewsletters || []
-  } catch (error) {
-    // Contentlayer 数据尚未生成或导入失败，返回空数组
-    // 这样页面仍然可以正常渲染，只是显示空状态
-    console.error('[首页] Contentlayer 导入错误:', error)
-    return []
-  }
+function getNewsletterDirCandidates(): string[] {
+  const cwd = process.cwd()
+  return [
+    path.join(cwd, '内容', '公开内容', '周报'),
+    path.join(cwd, '01-源代码', '网站代码', '内容', '公开内容', '周报'),
+  ].filter((p, i, a) => a.indexOf(p) === i)
 }
 
-/**
- * 首页组件
- * 
- * 功能：
- * - 显示所有已发布的周报列表
- * - 按日期倒序排列（最新的在前）
- * - 支持空状态显示（没有周报时显示提示信息）
- * - 响应式布局，适配不同屏幕尺寸
- * 
- * @returns {Promise<JSX.Element>} 首页 JSX 元素
- * 
- * @remarks
- * 这是一个 Server Component，在服务器端渲染。
- * 使用 async/await 获取 Contentlayer 数据，支持静态生成（SSG）。
- */
-export default async function Home() {
-  // 获取周报数据
-  const allNewsletters = await getNewsletters()
-  
-  /**
-   * 筛选和排序已发布的周报
-   * 
-   * 筛选逻辑：
-   * - published 字段可能是 undefined、true 或 false
-   * - 只有明确为 false 时才过滤掉
-   * - undefined 和 true 都视为已发布
-   * 
-   * 排序逻辑：
-   * - 按日期倒序排序（最新的在前）
-   * - 将日期字符串转换为时间戳进行比较
-   * 
-   * @type {Array<Newsletter>}
-   */
-  const publishedNewsletters = allNewsletters
-    .filter((n) => {
-      const isPublished = n.published !== false
-      return isPublished
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.date as string).getTime()
-      const dateB = new Date(b.date as string).getTime()
-      return dateB - dateA // 最新的在前
-  })
-  
-  // 如果有周报，显示周报列表
-  if (publishedNewsletters.length > 0) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
-            周报列表
-          </h1>
-          <p className="text-neutral-600 text-lg">
-            共 {publishedNewsletters.length} 期周报
-          </p>
-        </header>
+function parseFrontmatter(raw: string): Record<string, unknown> {
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+  const block = match?.[1] ?? ''
+  const out: Record<string, unknown> = {}
+  for (const line of block.split(/\r?\n/)) {
+    const m = line.match(/^(\w+):\s*(.*)$/)
+    if (!m) continue
+    const [, key, value] = m
+    let v: unknown = value.trim()
+    if (value.startsWith('"') && value.endsWith('"')) v = value.slice(1, -1).replace(/\\"/g, '"')
+    else if (value.startsWith("'") && value.endsWith("'")) v = value.slice(1, -1)
+    else if (value === 'true') v = true
+    else if (value === 'false') v = false
+    else if (/^\d{4}-\d{2}-\d{2}/.test(value)) v = value
+    out[key] = v
+  }
+  return out
+}
 
-        <NewsletterList newsletters={publishedNewsletters} />
+async function getNewsletters(): Promise<NewsletterDisplay[]> {
+  const list: NewsletterDisplay[] = []
+  let candidates: string[] = []
+  try {
+    candidates = getNewsletterDirCandidates()
+  } catch {
+    return list
+  }
+
+  for (const dir of candidates) {
+    try {
+      if (!dir || !fs.existsSync(dir)) continue
+      const files = fs.readdirSync(dir).filter((f) => typeof f === 'string' && f.endsWith('.md'))
+      for (const file of files) {
+        try {
+          const fullPath = path.join(dir, file)
+          if (!fs.existsSync(fullPath)) continue
+          const raw = fs.readFileSync(fullPath, 'utf-8')
+          const fm = parseFrontmatter(raw)
+          const slug = path.basename(file, '.md')
+          list.push({
+            slug,
+            title: (fm.title as string) ?? undefined,
+            date: (fm.date as string) ?? undefined,
+            coverImage: (fm.coverImage as string) ?? undefined,
+            tags: Array.isArray(fm.tags) ? (fm.tags as string[]) : [],
+            published: fm.published !== false,
+            editorialContent: undefined,
+            includedItems: undefined,
+          })
+        } catch {
+          // 单文件解析失败则跳过，不影响其他周报
+        }
+      }
+      if (list.length > 0) break
+    } catch {
+      continue
+    }
+  }
+
+  return list
+}
+
+export default async function Home() {
+  try {
+    let list: NewsletterDisplay[] = []
+    try {
+      list = await getNewsletters()
+    } catch {
+      list = []
+    }
+
+    const published = (list || [])
+      .filter((n) => n.published !== false)
+      .sort((a, b) => {
+        const tA = new Date(a.date || 0).getTime()
+        const tB = new Date(b.date || 0).getTime()
+        return tB - tA
+      })
+
+    const latest = published[0] ?? null
+    const featured = published.slice(0, 4)
+
+    return (
+      <>
+        {/* Hero：最新一期或空状态 */}
+        <section className="w-full min-h-[50vh] md:min-h-[420px] bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center">
+          <div className="container mx-auto max-w-7xl px-4 py-10 sm:py-12 md:py-16 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+            <div className="max-w-2xl">
+              {latest ? (
+                <>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 md:mb-4 leading-tight">
+                    【Sandy的AI观察报】{latest.title ?? '最新一期'}
+                  </h1>
+                  <p className="text-neutral-300 text-sm md:text-base mb-2">
+                    {new Date((latest.date as string) || '').toLocaleDateString('zh-CN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                  <p className="text-neutral-400 text-sm md:text-base mb-5 md:mb-6">
+                    洞察与精选，每周更新
+                  </p>
+                  <Link
+                    href={`/newsletter/${latest.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 min-h-[44px] px-5 py-3 border border-white/60 text-white rounded-lg font-medium hover:bg-white/10 transition-colors"
+                  >
+                    阅读最新 →
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+                    Sandy的AI观察报
+                  </h1>
+                  <p className="text-neutral-400 text-sm md:text-base mb-5 md:mb-6">
+                    洞察与精选，每周更新。在管理页面创建你的第一份周报。
+                  </p>
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-2 min-h-[44px] px-5 py-3 border border-white/60 text-white rounded-lg font-medium hover:bg-white/10 transition-colors"
+                  >
+                    前往管理页面 →
+                  </Link>
+                </>
+              )}
+            </div>
+            {/* 右侧：最新一期封面图或占位 */}
+            {latest?.coverImage ? (
+              <div className="hidden lg:block relative flex-1 max-w-xl aspect-video rounded-lg overflow-hidden">
+                <Image
+                  src={latest.coverImage}
+                  alt={latest.title ?? '最新一期封面'}
+                  fill
+                  sizes="(max-width: 1024px) 0vw, 50vw"
+                  className="object-cover object-right"
+                  priority
+                />
+              </div>
+            ) : (
+              <div className="hidden lg:block w-0 flex-1 max-w-md" aria-hidden />
+            )}
+          </div>
+        </section>
+
+        {/* 往期周报：横向卡片 */}
+        <div className="container mx-auto max-w-7xl px-4 py-10 md:py-12">
+          {featured.length > 0 && (
+            <section className="mb-12 md:mb-16">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl md:text-2xl font-bold text-neutral-800">往期周报</h2>
+                <a href="#list" className="text-sm text-primary-blue hover:underline">
+                  查看全部
+                </a>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0">
+                {featured.map((n) => (
+                  <div key={n.slug} className="snap-start flex-shrink-0 w-[280px] md:w-auto min-w-[280px] md:min-w-0">
+                    <NewsletterHorizontalCard newsletter={n} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 周报网格（全量） */}
+          <section id="list">
+            <header className="mb-8">
+              <h2 className="text-xl md:text-2xl font-bold text-neutral-800 mb-2">周报列表</h2>
+              <p className="text-sm text-neutral-500">共 {published.length} 期周报</p>
+            </header>
+            {published.length > 0 ? (
+              <NewsletterList newsletters={published} />
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-6xl mb-4 opacity-40" aria-hidden>📋</p>
+                <p className="text-neutral-600 text-lg mb-2">暂无周报</p>
+                <p className="text-neutral-500 text-sm mb-6">在管理页面创建并发布你的第一份周报</p>
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-primary-blue text-white rounded-lg font-medium hover:bg-primary-blue/90 transition-colors"
+                >
+                  前往管理页面
+                </Link>
+              </div>
+            )}
+          </section>
+        </div>
+      </>
+    )
+  } catch (err) {
+    // 任何未预期的错误都显示 fallback，避免整页无法访问
+    const msg = err instanceof Error ? err.message : String(err)
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-7xl text-center">
+        <h1 className="text-2xl font-bold text-neutral-800 mb-4">首页加载出错</h1>
+        <p className="text-neutral-600 mb-4">{msg}</p>
+        <a href="/admin" className="text-primary-blue hover:underline">前往管理页</a>
       </div>
     )
   }
-  
-  // 如果没有周报，显示空状态
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="text-center py-16">
-        <p className="text-neutral-600 text-lg">暂无周报，请先创建周报</p>
-        <p className="text-neutral-500 text-sm mt-2">
-          访问 <a href="/admin" className="text-primary-blue hover:underline">管理页面</a> 创建周报
-        </p>
-      </div>
-    </div>
-  )
 }
-

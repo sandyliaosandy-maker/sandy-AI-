@@ -163,8 +163,8 @@ export default async function NoteDetailPage({ params }: PageProps) {
       <article>
         <div className="flex items-start justify-between gap-4 mb-6">
           <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 flex-1">
-            {post.title}
-          </h1>
+          {post.title}
+        </h1>
           {/* 暂时注释掉付费标签（支付功能暂不开发） */}
           {/* {isPremium && <PremiumBadge />} */}
         </div>

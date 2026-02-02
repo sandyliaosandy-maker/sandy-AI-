@@ -10,6 +10,12 @@
  */
 import { PostList } from '@/components/内容组件/文章列表'
 import type { Note } from '../../.contentlayer/generated'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: '笔记 - Sandy的AI收藏夹',
+  description: '记录我的思考、学习和分享',
+}
 
 /**
  * 获取笔记数据

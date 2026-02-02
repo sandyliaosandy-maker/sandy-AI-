@@ -17,6 +17,19 @@ async function ensureDir(dirPath: string): Promise<void> {
   }
 }
 
+/** 与 admin 保存接口一致：获取网站内容根目录（与 Contentlayer、同步到线上 同一路径） */
+function getContentRoot(): string {
+  const cwd = process.cwd()
+  if (fs.existsSync(path.join(cwd, '内容')) && fs.existsSync(path.join(cwd, 'contentlayer.config.ts'))) {
+    return cwd
+  }
+  const nested = path.join(cwd, '01-源代码', '网站代码')
+  if (fs.existsSync(path.join(nested, '内容'))) {
+    return nested
+  }
+  return cwd
+}
+
 // 生成文件名（基于标题）
 function generateFileName(title: string): string {
   return title
@@ -46,9 +59,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 生成文件名
+    const contentRoot = getContentRoot()
     const fileName = `${generateFileName(title)}.md`
-    const newsletterDir = path.join(process.cwd(), '内容', '公开内容', '周报')
+    const newsletterDir = path.join(contentRoot, '内容', '公开内容', '周报')
     await ensureDir(newsletterDir)
     const filePath = path.join(newsletterDir, fileName)
 

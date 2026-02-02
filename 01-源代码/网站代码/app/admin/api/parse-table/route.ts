@@ -112,8 +112,30 @@ function parseMarkdownTable(filePath: string): TableRow[] {
   const rows: TableRow[] = []
   for (let i = dataStartIndex; i < lines.length; i++) {
     const line = lines[i].trim()
+    
+    // 跳过空行，而不是停止解析
+    if (!line || line.length === 0) {
+      continue
+    }
+    
+    // 如果遇到不以 | 开头的行，检查是否是表格结束
+    // 但不要立即停止，先检查后续几行是否还有表格行
     if (!line.startsWith('|')) {
-      break
+      // 检查后续几行是否还有表格行（最多检查5行）
+      let hasMoreTableRows = false
+      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+        const nextLine = lines[j].trim()
+        if (nextLine && nextLine.startsWith('|')) {
+          hasMoreTableRows = true
+          break
+        }
+      }
+      // 如果后续没有表格行了，才停止解析
+      if (!hasMoreTableRows) {
+        break
+      }
+      // 否则跳过这一行继续解析
+      continue
     }
 
     const values = parseTableRow(line)

@@ -9,12 +9,11 @@
  * @param newsletters - 周报数组
  * @param className - 可选的额外 CSS 类名
  */
-import { NewsletterCard } from './周报卡片'
-import type { Newsletter } from '../../.contentlayer/generated'
+import { NewsletterCard, type NewsletterDisplay } from './周报卡片'
 
 interface NewsletterListProps {
-  newsletters: Newsletter[] // 周报数组
-  className?: string // 可选的额外 CSS 类名
+  newsletters: NewsletterDisplay[]
+  className?: string
 }
 
 export function NewsletterList({ newsletters, className = '' }: NewsletterListProps) {
@@ -40,7 +39,7 @@ export function NewsletterList({ newsletters, className = '' }: NewsletterListPr
   }
 
   return (
-    <div className={`grid ${getGridCols()} gap-6 ${className}`}>
+    <div className={`grid ${getGridCols()} gap-8 ${className}`}>
       {newsletters.map((newsletter) => (
         <NewsletterCard key={newsletter.slug} newsletter={newsletter} />
       ))}

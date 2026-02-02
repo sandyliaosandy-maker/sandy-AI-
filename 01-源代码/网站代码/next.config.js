@@ -33,17 +33,15 @@ const nextConfig = {
         source: '/attachments/:path*',
         destination: '/attachments/:path*',
       },
-      {
-        // 将英文路径 /admin 重定向到中文路径 /管理
-        source: '/admin',
-        destination: '/管理',
-      },
-      {
-        // 将英文路径 /admin/api/:path* 重定向到中文路径 /管理/api/:path*
-        // 确保 API 路由也能正确访问
-        source: '/admin/api/:path*',
-        destination: '/管理/api/:path*',
-      },
+      // 不再把 /admin 重写到 /管理，直接使用 app/admin 下的页面和 API，避免「无法访问」
+      // {
+      //   source: '/admin',
+      //   destination: '/管理',
+      // },
+      // {
+      //   source: '/admin/api/:path*',
+      //   destination: '/管理/api/:path*',
+      // },
       {
         /**
          * 将中文路径 /周报/:slug* 重定向到英文路径 /newsletter/:slug*
@@ -104,25 +102,23 @@ const nextConfig = {
    * @param {import('webpack').Configuration} config - Webpack 配置对象
    * @returns {import('webpack').Configuration} 修改后的配置对象
    */
-  webpack: (config) => {
+  webpack: (config, { dev }) => {
     // 配置模块路径别名
-    // 将 `.contentlayer/generated` 和 `contentlayer/generated` 都指向实际生成的 index.mjs 文件
-    // 这样代码中使用 `import { ... } from '../.contentlayer/generated'` 时，
-    // webpack 会正确解析到 `.contentlayer/generated/index.mjs`
     config.resolve.alias = {
       ...config.resolve.alias,
       '.contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated/index.mjs'),
       'contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated/index.mjs'),
     }
-    
-    // 添加 .mjs 扩展名解析支持
-    // 确保 webpack 能够识别和解析 ES 模块文件（.mjs）
-    // 扩展名解析顺序：先尝试已有扩展名，再尝试 .mjs
-    config.resolve.extensions = [
-      ...config.resolve.extensions,
-      '.mjs',
-    ]
-    
+    config.resolve.extensions = [...config.resolve.extensions, '.mjs']
+
+    // 开发时忽略 .contentlayer 变更，减少因 Contentlayer 重新生成触发的 dev 重启
+    if (dev && config.watchOptions) {
+      config.watchOptions.ignored = [
+        ...(Array.isArray(config.watchOptions.ignored) ? config.watchOptions.ignored : []),
+        '**/.contentlayer/**',
+        '**/node_modules/**',
+      ]
+    }
     return config
   },
 }

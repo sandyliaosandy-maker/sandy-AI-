@@ -60,6 +60,24 @@ export default function NewsletterEditorPage() {
   // 获取可用的内容列表
   useEffect(() => {
     const allContent = [...allNews, ...allNotes]
+    
+    // 添加调试日志，确认 Contentlayer 实际生成的数据量
+    console.log('[周报编辑器] Contentlayer 数据统计:', {
+      allNewsCount: allNews.length,
+      allNotesCount: allNotes.length,
+      totalContentCount: allContent.length,
+      sampleNews: allNews.slice(0, 3).map(n => ({ 
+        slug: n.slug, 
+        title: n.title,
+        chineseTitle: (n as any).chineseTitle 
+      })),
+      sampleNotes: allNotes.slice(0, 3).map(n => ({ 
+        slug: n.slug, 
+        title: n.title,
+        chineseTitle: (n as any).chineseTitle 
+      })),
+    })
+    
     // 按日期排序，最新的在前
     const sorted = allContent.sort((a, b) => {
       const dateA = new Date(a.date as string).getTime()
@@ -211,14 +229,47 @@ export default function NewsletterEditorPage() {
     }
   }
 
-  // 筛选内容
+  // 筛选内容 - 改进搜索功能，支持搜索更多字段（包括正文内容）
   const filteredContent = availableContent.filter((item) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
+    
+    // 辅助函数：安全获取字段值
+    const getFieldValue = (field: string): string => {
+      const value = (item as Record<string, unknown>)[field]
+      return value && typeof value === 'string' ? value : ''
+    }
+    
+    // 获取正文内容（body.raw 或 body.code）
+    const getBodyContent = (): string => {
+      const body = (item as any).body
+      if (!body) return ''
+      // 优先使用 raw（原始 Markdown），如果没有则使用 code（编译后的 HTML）
+      return (body.raw || body.code || '').toLowerCase()
+    }
+    
+    // 搜索所有相关字段
     return (
+      // 英文标题
       item.title.toLowerCase().includes(query) ||
+      // 中文标题
+      getFieldValue('chineseTitle').toLowerCase().includes(query) ||
+      // 摘要（仅 News 类型）
       ('summary' in item && item.summary?.toLowerCase().includes(query)) ||
-      item.tags.some((tag: string) => tag.toLowerCase().includes(query))
+      // 标签
+      item.tags.some((tag: string) => tag.toLowerCase().includes(query)) ||
+      // 水下信息
+      getFieldValue('underwaterInfo').toLowerCase().includes(query) ||
+      // 案例提取
+      getFieldValue('caseExtraction').toLowerCase().includes(query) ||
+      // 涉及公司
+      getFieldValue('relatedCompanies').toLowerCase().includes(query) ||
+      // slug（文件路径）
+      item.slug.toLowerCase().includes(query) ||
+      // 来源
+      getFieldValue('source').toLowerCase().includes(query) ||
+      // 正文内容（搜索前 2000 字符，避免性能问题）
+      getBodyContent().substring(0, 2000).includes(query)
     )
   })
 

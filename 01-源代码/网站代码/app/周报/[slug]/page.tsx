@@ -158,8 +158,8 @@ export default async function NewsletterPage({ params }: PageProps) {
         <header className="mb-8">
           <div className="flex items-start justify-between gap-4 mb-6">
             <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 flex-1">
-              {newsletter.title}
-            </h1>
+            {newsletter.title}
+          </h1>
             {/* 暂时注释掉付费标签（支付功能暂不开发） */}
             {/* {isPremium && <PremiumBadge />} */}
           </div>
@@ -190,9 +190,9 @@ export default async function NewsletterPage({ params }: PageProps) {
           // 优先使用 editorialContent 字段
           if (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) {
             return (
-              <section className="mb-12 prose prose-lg max-w-none">
-                <MDXContent code={newsletter.editorialContent.code} />
-              </section>
+          <section className="mb-12 prose prose-lg max-w-none">
+            <MDXContent code={newsletter.editorialContent.code} />
+          </section>
             )
           }
           
