@@ -30,7 +30,7 @@ export async function GET() {
   let mdFiles: string[] = []
   let jsonFiles: string[] = []
   let parsedCount = 0
-  let sampleSlugs: string[] = []
+  const sampleSlugs: string[] = []
 
   if (mdExists) {
     try {

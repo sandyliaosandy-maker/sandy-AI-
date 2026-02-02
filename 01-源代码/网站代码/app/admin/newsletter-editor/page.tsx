@@ -69,12 +69,12 @@ export default function NewsletterEditorPage() {
       sampleNews: allNews.slice(0, 3).map(n => ({ 
         slug: n.slug, 
         title: n.title,
-        chineseTitle: (n as any).chineseTitle 
+        chineseTitle: (n as News & { chineseTitle?: string }).chineseTitle 
       })),
       sampleNotes: allNotes.slice(0, 3).map(n => ({ 
         slug: n.slug, 
         title: n.title,
-        chineseTitle: (n as any).chineseTitle 
+        chineseTitle: (n as Note & { chineseTitle?: string }).chineseTitle 
       })),
     })
     
@@ -242,7 +242,7 @@ export default function NewsletterEditorPage() {
     
     // 获取正文内容（body.raw 或 body.code）
     const getBodyContent = (): string => {
-      const body = (item as any).body
+      const body = (item as { body?: { raw?: string; code?: string } }).body
       if (!body) return ''
       // 优先使用 raw（原始 Markdown），如果没有则使用 code（编译后的 HTML）
       return (body.raw || body.code || '').toLowerCase()

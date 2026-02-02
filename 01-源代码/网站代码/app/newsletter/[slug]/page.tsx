@@ -118,7 +118,7 @@ export default async function NewsletterPage({ params }: PageProps) {
   }
 
   const normalized = normalizeSlug(decodedSlug)
-  let newsletter: Newsletter | null = allNewsletters.find((n: Newsletter) => {
+  const newsletter: Newsletter | null = allNewsletters.find((n: Newsletter) => {
     if (n.slug === rawSlug || n.slug === decodedSlug) return true
     if (normalizeSlug(n.slug) === normalized) return true
     try {
@@ -200,7 +200,7 @@ export default async function NewsletterPage({ params }: PageProps) {
         {fromFs ? (
           fromFs.bodyRaw ? (
             <section className="mb-12 prose prose-lg max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{fromFs.bodyRaw}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm as any]}>{fromFs.bodyRaw}</ReactMarkdown>
             </section>
           ) : null
         ) : newsletter && (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) ? (

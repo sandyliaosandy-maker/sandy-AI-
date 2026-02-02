@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, CheckCircle2, XCircle, Loader2, FileText, Upload } from 'lucide-react'
+import { Search, CheckCircle2, Loader2, FileText, Upload } from 'lucide-react'
 
 interface TableRow {
   filePath: string
