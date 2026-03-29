@@ -25,14 +25,35 @@ interface IncludedItem {
   relatedCompanies?: string
 }
 
+/** feed：设计稿样式（标题 + 摘要 + 查看原文）；detailed：完整字段卡片 */
+export type NewsletterContentLayout = 'feed' | 'detailed'
+
 interface NewsletterContentListProps {
   includedItems: string // JSON 字符串格式的包含内容数组
   allNews: News[] // 所有新闻数据（从父组件传递）
   allNotes: Note[] // 所有笔记数据（从父组件传递）
   sourceUrlMap?: Record<string, string> // slug -> sourceUrl 映射
+  /** 默认 feed，与周报详情页新样式一致 */
+  layout?: NewsletterContentLayout
 }
 
-export default function NewsletterContentList({ includedItems, allNews, allNotes, sourceUrlMap = {} }: NewsletterContentListProps) {
+function buildExcerpt(item: IncludedItem): string {
+  const u = (item.underwaterInfo || '').trim()
+  const c = (item.caseExtraction || '').trim()
+  const raw = u || c
+  if (!raw) return ''
+  const max = 420
+  if (raw.length <= max) return raw
+  return raw.slice(0, max).trim() + '…'
+}
+
+export default function NewsletterContentList({
+  includedItems,
+  allNews,
+  allNotes,
+  sourceUrlMap = {},
+  layout = 'feed',
+}: NewsletterContentListProps) {
   // 调试信息（仅在开发环境）
   if (process.env.NODE_ENV === 'development') {
     console.log('[周报内容列表] 接收到的数据:', {
@@ -215,7 +236,52 @@ export default function NewsletterContentList({ includedItems, allNews, allNotes
     )
   }
 
-  // 渲染内容列表
+  // —— Feed：标题 + 摘要 + 查看原文（设计稿）——
+  if (layout === 'feed') {
+    return (
+      <div className="divide-y divide-neutral-200">
+        {contentsWithDetails.map(({ item, originalContent }) => {
+          let originalUrl: string | null = null
+          if (sourceUrlMap[item.slug]) {
+            originalUrl = sourceUrlMap[item.slug]
+          } else if (originalContent && 'sourceUrl' in originalContent && originalContent.sourceUrl) {
+            originalUrl = originalContent.sourceUrl as string
+          }
+          const linkUrl = originalUrl || `/notes/${item.slug}`
+          const isExternalLink = !!originalUrl
+          const titleText = item.chineseTitle || originalContent?.title || item.slug
+          const excerpt = buildExcerpt(item)
+
+          return (
+            <article key={item.slug} className="py-8">
+              <h3 className="text-base font-bold leading-snug text-neutral-900 md:text-lg">{titleText}</h3>
+              {excerpt ? (
+                <p className="mt-3 text-sm leading-relaxed text-neutral-600 md:text-[15px]">{excerpt}</p>
+              ) : null}
+              <div className="mt-4">
+                {isExternalLink ? (
+                  <a
+                    href={linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-normal text-blue-600 hover:underline"
+                  >
+                    查看原文
+                  </a>
+                ) : (
+                  <Link href={linkUrl} className="text-sm font-normal text-blue-600 hover:underline">
+                    查看原文
+                  </Link>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // —— Detailed：原有多字段卡片 ——
   return (
     <div className="space-y-6">
       {contentsWithDetails.map(({ item, originalContent }, index) => {

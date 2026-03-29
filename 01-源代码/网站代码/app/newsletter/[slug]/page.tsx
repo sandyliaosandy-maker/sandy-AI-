@@ -11,11 +11,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Calendar, Tag, ArrowLeft } from '@/components/界面组件/图标'
+import { ArrowLeft } from '@/components/界面组件/图标'
 import { allNewsletters, allNews, allNotes, type Newsletter, type News, type Note } from '../../../.contentlayer/generated'
 import { MDXContent } from '@/components/内容组件/内容渲染'
 import NewsletterContentList from '@/components/内容组件/周报内容列表'
 import NewsletterAnalytics from '@/components/内容组件/周报访问统计'
+import { parseNewsletterDisplayTitle } from '@/lib/parse-newsletter-title'
 
 /** 统一 slug 比较：去掉全角冒号，便于「ep03：」与「ep03」匹配 */
 function normalizeSlug(s: string): string {
@@ -139,7 +140,6 @@ export default async function NewsletterPage({ params }: PageProps) {
   const title = newsletter ? (newsletter.title as string) : fromFs!.title
   const dateStr = newsletter ? (newsletter.date as string) : fromFs!.date
   const coverImage = newsletter ? newsletter.coverImage : fromFs!.coverImage
-  const tags = newsletter ? (newsletter.tags || []) : fromFs!.tags
   const includedItems = newsletter ? (newsletter.includedItems || '[]') : fromFs!.includedItems
 
   const formattedDate = new Date(dateStr || '').toLocaleDateString('zh-CN', {
@@ -149,12 +149,32 @@ export default async function NewsletterPage({ params }: PageProps) {
   })
 
   const sourceUrlMap = extractSourceUrls(allNews, allNotes)
+  const { episodeLabel, headline } = parseNewsletterDisplayTitle(title)
 
   return (
     <div className="min-h-screen bg-white">
       <NewsletterAnalytics newsletterSlug={slug} />
-      {coverImage && (
-        <div className="relative w-full h-96 md:h-[500px]">
+
+      <div className="mx-auto max-w-[720px] px-4 pb-2 pt-6 md:px-6">
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center text-sm text-neutral-500 transition-colors hover:text-neutral-800"
+        >
+          <ArrowLeft className="mr-1.5 h-4 w-4" />
+          返回首页
+        </Link>
+        {episodeLabel ? (
+          <p className="mb-3 text-sm font-medium text-orange-600">{episodeLabel}</p>
+        ) : null}
+        <h1 className="text-center text-[1.35rem] font-bold leading-snug text-neutral-900 sm:text-2xl md:text-[1.75rem] md:leading-tight">
+          {headline}
+        </h1>
+        <p className="mt-4 text-center text-sm text-neutral-500">{formattedDate}</p>
+        <div className="h-6 md:h-8" aria-hidden />
+      </div>
+
+      {coverImage ? (
+        <div className="relative aspect-[21/9] w-full min-h-[200px] overflow-hidden bg-neutral-100 sm:min-h-[260px] md:max-h-[min(56vh,440px)]">
           <Image
             src={coverImage}
             alt={title}
@@ -164,70 +184,53 @@ export default async function NewsletterPage({ params }: PageProps) {
             priority
           />
         </div>
-      )}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Link
-          href="/"
-          className="inline-flex items-center text-neutral-600 hover:text-neutral-800 mb-8 transition-colors"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          返回首页
-        </Link>
-        <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-6">{title}</h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <time>{formattedDate}</time>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <Tag className="h-4 w-4" />
-                {tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 bg-primary-blue/20 text-primary-blue rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </header>
+      ) : null}
 
+      <div className="mx-auto max-w-[720px] px-4 py-10 md:px-6">
         {/* 卷首语 / 正文 */}
         {fromFs ? (
           fromFs.bodyRaw ? (
-            <section className="mb-12 prose prose-lg max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm as any]}>{fromFs.bodyRaw}</ReactMarkdown>
+            <>
+              <h2 className="mb-4 text-lg font-bold text-neutral-900">Welcome !</h2>
+              <section className="prose prose-neutral mb-0 max-w-none prose-p:text-neutral-700 prose-p:leading-relaxed prose-headings:font-bold">
+                <ReactMarkdown remarkPlugins={[remarkGfm as any]}>{fromFs.bodyRaw}</ReactMarkdown>
+              </section>
+              <hr className="my-10 border-neutral-200" />
+            </>
+          ) : (
+            <hr className="my-10 border-neutral-200" />
+          )
+        ) : newsletter && newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code ? (
+          <>
+            <h2 className="mb-4 text-lg font-bold text-neutral-900">Welcome !</h2>
+            <section className="prose prose-neutral max-w-none prose-p:text-neutral-700 prose-p:leading-relaxed prose-headings:font-bold">
+              <MDXContent code={newsletter.editorialContent.code} />
             </section>
-          ) : null
-        ) : newsletter && (newsletter.editorialContent && 'code' in newsletter.editorialContent && newsletter.editorialContent.code) ? (
-          <section className="mb-12 prose prose-lg max-w-none">
-            <MDXContent code={newsletter.editorialContent.code} />
-          </section>
+            <hr className="my-10 border-neutral-200" />
+          </>
         ) : newsletter?.body && 'code' in newsletter.body && newsletter.body.code ? (
-          <section className="mb-12 prose prose-lg max-w-none">
-            <MDXContent code={newsletter.body.code} />
-          </section>
-        ) : null}
+          <>
+            <h2 className="mb-4 text-lg font-bold text-neutral-900">Welcome !</h2>
+            <section className="prose prose-neutral max-w-none prose-p:text-neutral-700 prose-p:leading-relaxed prose-headings:font-bold">
+              <MDXContent code={newsletter.body.code} />
+            </section>
+            <hr className="my-10 border-neutral-200" />
+          </>
+        ) : (
+          <hr className="my-10 border-neutral-200" />
+        )}
 
-        <hr className="my-12 border-neutral-200" />
         <section className="mb-12">
-          <h2 className="text-3xl font-bold text-neutral-800 mb-8">本期内容</h2>
           <NewsletterContentList
             includedItems={includedItems}
             allNews={allNews}
             allNotes={allNotes}
             sourceUrlMap={sourceUrlMap}
+            layout="feed"
           />
         </section>
-        <div className="mt-12 pt-8 border-t border-neutral-200">
-          <Link
-            href="/"
-            className="inline-flex items-center text-primary-blue hover:text-primary-pink transition-colors"
-          >
+        <div className="mt-12 border-t border-neutral-200 pt-8">
+          <Link href="/" className="inline-flex items-center text-sm text-blue-600 transition-colors hover:underline">
             <ArrowLeft className="mr-2 h-4 w-4" />
             返回首页
           </Link>
